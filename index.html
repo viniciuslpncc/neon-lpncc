@@ -342,6 +342,36 @@
   .custom-task-item .ct-edit{background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 4px;display:none}
   .custom-task-item .ct-edit:hover{color:var(--navy)}
   body.internal-on .custom-task-item .ct-edit{display:inline-block}
+  /* footer com status / responsável / stamp na custom task — só aparece na visão interna */
+  .custom-task-item .ct-tfoot{display:none}
+  body.internal-on .custom-task-item .ct-tfoot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+
+  /* Filtro por responsável (no intbar) */
+  .resp-filter{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;margin-left:6px}
+  .resp-filter .rlab{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:700;padding:0 11px}
+  .resp-filter .rf-btn{font-family:var(--body);font-size:10.5px;font-weight:700;padding:6px 12px;background:#fff;color:var(--gray);border:none;border-left:1px solid var(--line);cursor:pointer;transition:background .15s,color .15s}
+  .resp-filter .rf-btn:hover{color:var(--navy)}
+  .resp-filter .rf-btn.on[data-rf="all"]{background:var(--gray);color:#fff}
+  .resp-filter .rf-btn.on[data-rf="V"]{background:var(--navy);color:#fff}
+  .resp-filter .rf-btn.on[data-rf="G"]{background:var(--f2);color:#fff}
+  .resp-filter .rf-btn.on[data-rf="D"]{background:var(--sage);color:var(--navy)}
+
+  /* Filtros aplicados — esmaece etapas que NÃO batem com o responsável selecionado */
+  /* Vinicius: mantém V e D, esmaece G */
+  body.filter-resp-V label.task[data-resp-current="G"],
+  body.filter-resp-V label.task[data-resp-current="G"] + .taskint,
+  body.filter-resp-V .custom-task-section[data-resp-current="G"]{opacity:.18}
+  /* Gabriel: mantém G e D, esmaece V */
+  body.filter-resp-G label.task[data-resp-current="V"],
+  body.filter-resp-G label.task[data-resp-current="V"] + .taskint,
+  body.filter-resp-G .custom-task-section[data-resp-current="V"]{opacity:.18}
+  /* Os dois: mantém só D, esmaece V e G */
+  body.filter-resp-D label.task[data-resp-current="V"],
+  body.filter-resp-D label.task[data-resp-current="V"] + .taskint,
+  body.filter-resp-D label.task[data-resp-current="G"],
+  body.filter-resp-D label.task[data-resp-current="G"] + .taskint,
+  body.filter-resp-D .custom-task-section[data-resp-current="V"],
+  body.filter-resp-D .custom-task-section[data-resp-current="G"]{opacity:.18}
   /* checkbox da custom task — mesmo visual do .box nativo */
   .custom-task-item .ct-check{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0}
   .custom-task-item .ct-check input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
@@ -422,6 +452,13 @@
     <span class="l"><span class="dia"></span> <b>Visão interna</b> — editável; cada mudança fica registrada com autor e data</span>
     <div class="intbar-actions">
       <div class="authsel"><span class="al">Editando como</span><button data-a="Vinicius" class="on" onclick="setAuthor('Vinicius')">Vinicius</button><button data-a="Gabriel" onclick="setAuthor('Gabriel')">Gabriel</button></div>
+      <div class="resp-filter" title="Filtrar etapas por responsável">
+        <span class="rlab">Mostrar</span>
+        <button class="rf-btn on" data-rf="all" onclick="setRespFilter('all')">Todos</button>
+        <button class="rf-btn" data-rf="V" onclick="setRespFilter('V')">Vinicius</button>
+        <button class="rf-btn" data-rf="G" onclick="setRespFilter('G')">Gabriel</button>
+        <button class="rf-btn" data-rf="D" onclick="setRespFilter('D')">Os dois</button>
+      </div>
       <button class="ib" onclick="exportState()">Salvar cópia</button>
       <button class="ib" onclick="document.getElementById('importFile').click()">Carregar</button>
       <input id="importFile" type="file" accept="application/json" style="display:none">
@@ -1212,7 +1249,8 @@
   // Exposto pra ser chamado pelo script de custom tasks após adicionar/remover.
   window.refreshNeonProgress = function(){ rescanBoxes(); render(); };
 
-  [].slice.call(document.querySelectorAll('.status')).forEach(function(g){
+  function bindStatusGroup(g){
+    if(g._neonStatusBound) return; g._neonStatusBound = true;
     var id=g.getAttribute('data-task'); var cur=state.status[id];
     [].slice.call(g.querySelectorAll('button')).forEach(function(btn){
       if(String(cur)===btn.getAttribute('data-s')) btn.classList.add('on');
@@ -1220,18 +1258,44 @@
         g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on');
         state.status[id]=btn.getAttribute('data-s'); touch(id); });
     });
-  });
-
-  [].slice.call(document.querySelectorAll('.resp')).forEach(function(g){
+  }
+  // Pra .resp dentro de .taskint, o label.task associado é o sibling anterior do .taskint
+  function findRespParent(g){
+    var p = g.closest('.custom-task-section');
+    if(p) return p;
+    p = g.closest('label.task');
+    if(p) return p;
+    var ti = g.closest('.taskint');
+    if(ti && ti.previousElementSibling && ti.previousElementSibling.matches && ti.previousElementSibling.matches('label.task')){
+      return ti.previousElementSibling;
+    }
+    return null;
+  }
+  function bindRespGroup(g){
     var id=g.getAttribute('data-resp'); var cur=state.resp[id]||RESP_DEFAULT[id]||'D';
     if(!state.resp[id]) state.resp[id]=cur;
+    var parent = findRespParent(g);
+    if(parent) parent.setAttribute('data-resp-current', cur);
+    if(g._neonRespBound) return; g._neonRespBound = true;
     [].slice.call(g.querySelectorAll('button')).forEach(function(btn){
       if(btn.getAttribute('data-r')===cur) btn.classList.add('on');
       btn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation();
         g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on');
-        state.resp[id]=btn.getAttribute('data-r'); touch(id); });
+        state.resp[id]=btn.getAttribute('data-r');
+        var p = findRespParent(g);
+        if(p) p.setAttribute('data-resp-current', btn.getAttribute('data-r'));
+        touch(id);
+      });
     });
-  });
+  }
+  function rescanStatusResp(){
+    [].slice.call(document.querySelectorAll('.status')).forEach(bindStatusGroup);
+    [].slice.call(document.querySelectorAll('.resp')).forEach(bindRespGroup);
+    [].slice.call(document.querySelectorAll('.stamp')).forEach(function(el){ renderStamp(el.getAttribute('data-stamp')); });
+  }
+  rescanStatusResp();
+  // Exposto pra ser chamado pelo script de custom tasks após render
+  window.refreshStatusResp = rescanStatusResp;
   save();
 
   [].slice.call(document.querySelectorAll('.ed')).forEach(function(el){
@@ -1731,6 +1795,20 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
           +'</div>'
           +(detParts.length?'<div class="ct-det">'+detParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
           +(relParts.length?'<div class="ct-rel">'+relParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
+          +'<div class="ct-tfoot interno">'
+            +'<div class="status" data-task="'+esc(task.id)+'">'
+              +'<button data-s="0">N\u00e3o iniciado</button>'
+              +'<button data-s="1">Em andamento</button>'
+              +'<button data-s="2">Conclu\u00eddo</button>'
+            +'</div>'
+            +'<div class="resp" data-resp="'+esc(task.id)+'">'
+              +'<span class="rlab">Respons\u00e1vel</span>'
+              +'<button data-r="V">Vinicius</button>'
+              +'<button data-r="G">Gabriel</button>'
+              +'<button data-r="D">Os dois</button>'
+            +'</div>'
+            +'<span class="stamp" data-stamp="'+esc(task.id)+'"></span>'
+          +'</div>'
         +'</div>';
       /* wire events */
       var titleEl=wrap.querySelector('.ct-title');
@@ -1756,8 +1834,9 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       });
       try{ if(btn.parentNode) btn.parentNode.insertBefore(wrap,btn); }catch(e){}
     });
-    // Notifica o script principal pra rebindar os novos checkboxes e recalcular o anel.
+    // Notifica o script principal pra rebindar os novos checkboxes + status/resp e recalcular o anel.
     if(window.refreshNeonProgress) window.refreshNeonProgress();
+    if(window.refreshStatusResp) window.refreshStatusResp();
   }
 
   /* ---- modal ---- */
@@ -2010,6 +2089,17 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   });
   if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
+</script>
+
+<script>
+/* ── Filtro por responsável: esmaece etapas que não batem ── */
+window.setRespFilter = function(rf){
+  document.body.classList.remove('filter-resp-V','filter-resp-G','filter-resp-D');
+  if(rf && rf!=='all') document.body.classList.add('filter-resp-'+rf);
+  [].slice.call(document.querySelectorAll('.resp-filter .rf-btn')).forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-rf')===rf);
+  });
+};
 </script>
 
 <!-- ABA FLUXO (mapa de dependências) -->
