@@ -332,6 +332,46 @@
   .custom-task-item .ct-del{background:transparent;border:none;color:var(--gray);font-size:16px;cursor:pointer;padding:0 4px}
   .custom-task-item .ct-del:hover{color:#c0392b}
   .custom-task-item .ct-det{font-size:11.5px;color:var(--gray);line-height:1.55;margin-top:4px}
+  /* reorder controls */
+  .reorder{display:none;flex-direction:column;gap:1px;margin-left:auto;flex-shrink:0}
+  body.internal-on label.task .reorder{display:inline-flex}
+  .reorder button{width:22px;height:15px;border:1px solid var(--line);background:#fff;color:var(--gray);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:3px;transition:all .15s}
+  .reorder button:first-child{border-radius:4px 4px 2px 2px}
+  .reorder button:last-child{border-radius:2px 2px 4px 4px}
+  .reorder button:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .reorder button:disabled{opacity:.25;cursor:default;background:#fff;color:var(--gray);border-color:var(--line)}
+  .reorder svg{width:9px;height:9px}
+  /* ════ POLIMENTO VISUAL v2 ════ */
+  /* Detalhe interno: caixa mais leve, respira mais */
+  .taskint{margin:0 6px 16px 47px !important;padding:16px 20px !important;background:#fbfcfc !important;border:1px solid var(--line-soft) !important;border-left:2px solid var(--sage) !important;border-radius:0 8px 8px 0 !important}
+  /* Labels O QUÊ/PRA QUÊ/COMO: viram rótulos de texto, sem caixa */
+  .det{display:grid !important;grid-template-columns:64px 1fr !important;gap:14px !important;align-items:baseline !important;margin-bottom:9px !important;font-size:13px !important}
+  .det .k{background:transparent !important;border:none !important;padding:0 !important;min-width:0 !important;font-size:8.5px !important;letter-spacing:.11em !important;color:var(--gray) !important;text-align:left !important;padding-top:2px !important}
+  .det .ed{color:var(--ink);line-height:1.55}
+  /* Rodapé de controles: separador sutil acima, mais ar */
+  .tfoot{gap:8px 16px !important;margin-top:16px !important;padding-top:14px !important;border-top:1px solid var(--line-soft) !important}
+  /* Status e responsável: pílulas mais discretas */
+  .status,.resp{border-color:var(--line-soft) !important;border-radius:7px !important}
+  .status button,.resp button{font-size:9.5px !important;padding:5px 12px !important;color:#9a9a9e !important}
+  .rlab{font-size:8.5px !important;color:#b0b0b4 !important}
+  /* Campo de anotações: fundo levemente diferente, borda suave */
+  .taskfield{background:#fbfcfc !important;border-color:var(--line-soft) !important;font-size:12px !important;min-height:38px !important}
+  .taskfield:focus{background:#fff !important;border-color:var(--sage) !important;outline:none}
+  /* Linha de exclusão: bem mais discreta */
+  .restore-hint{font-size:10px !important;color:#b8b8bc !important;font-style:italic}
+  .task-del-btn{border-color:#ececec !important;color:#b0b0b4 !important;font-size:10px !important;padding:4px 11px !important}
+  .task-del-btn:hover{border-color:#d88 !important;color:#c0392b !important}
+  /* Título da tarefa: um pouco mais de peso pra hierarquia */
+  label.task .lbl .txt{font-weight:500}
+  /* Código: chip mais discreto */
+  .code{background:#eef3f3 !important;color:#5a7a82 !important;font-size:10.5px !important}
+  /* Reorder: integra melhor */
+  body.internal-on label.task{align-items:flex-start}
+  .reorder{margin-left:14px;margin-top:1px}
+  /* Cabeçalho de fase: respira mais */
+  .ph-head{padding:22px 26px !important}
+  /* espaçamento entre tarefas na visão interna */
+  body.internal-on .tasks > label.task{margin-top:6px}
 </style>
 </head>
 <body>
@@ -1205,6 +1245,7 @@
 
   window.setView=function(v){
     if(v==='interna'&&!unlocked){ askInternal(); return; }
+    try{applyTitleOverrides();}catch(e){}
     document.body.classList.toggle('internal-on', v==='interna');
     document.body.classList.toggle('contrato-on', v==='contrato');
     ['btnCli','btnInt','btnCon'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
@@ -1256,12 +1297,14 @@
   }
 
   function applyTitleOverrides(){
+    if(!state.titles) state.titles={};
     [].slice.call(document.querySelectorAll('label.task .txt')).forEach(function(el){
       var id=el.getAttribute('data-tid');
       if(!id){ var lb=el.parentNode; while(lb&&lb.tagName!=='LABEL') lb=lb.parentNode; var cb=lb?lb.querySelector('input[type=checkbox]'):null; id=cb?cb.id:null; }
       if(id&&state.titles[id]!=null&&state.titles[id]!=='') el.textContent=state.titles[id];
     });
   }
+  window.applyTitleOverrides=applyTitleOverrides;
 
   function applyDeletedState(){
     boxes.forEach(function(cb){
@@ -1290,9 +1333,8 @@
     rb.textContent='Restaurar excluídas';
     rb.style.display='none';
     rb.addEventListener('click', restoreAllDeleted);
-    // insert before the last button (Sair)
-    var sair=acts.querySelector('button:last-child');
-    if(sair) acts.insertBefore(rb, sair); else acts.appendChild(rb);
+    // insert before the last button (Sair) — safe
+    try{ var sair=acts.querySelector('button:last-child'); if(sair&&sair.parentNode===acts){ acts.insertBefore(rb, sair); } else { acts.appendChild(rb); } }catch(e){ acts.appendChild(rb); }
     // show when there are deleted tasks
     setInterval(function(){
       var hasDel=Object.keys(state.deleted).some(function(k){return state.deleted[k];});
@@ -1493,18 +1535,7 @@
       tbody.appendChild(tr);
     });
     var tf=document.getElementById('cc-total'); if(tf) tf.textContent=brl(acc);
-    var st=document.getElementById('cc-status'); if(!st) return;
-    var diff=acc-fixed;
-    if(acc===0){st.style.display='none';return;}
-    st.style.display='block';
-    var pctD=Math.min(100,Math.round(acc/fixed*100));
-    if(diff<0){
-      st.style.background='#FFF8F0';st.style.border='1px solid #F5C89A';st.style.color='#7a4700';
-      st.innerHTML='<b>Apurado até agora: '+brl(acc)+'</b> — faltam <b>'+brl(Math.abs(diff))+'</b> para o valor fixo de referência ('+pctD+'% concluído). Se a janela encerrar aqui, a cláusula penal garante R$\u00a099.000.';
-    } else {
-      st.style.background='#F0F9F4';st.style.border='1px solid #A8D5B8';st.style.color='#1a5c33';
-      st.innerHTML='<b>Apurado na janela: '+brl(acc)+'</b> — supera o valor fixo em <b>'+brl(diff)+'</b>. O modelo de participação foi mais favorável que o valor fixo contratado.';
-    }
+    var st=document.getElementById('cc-status'); if(st) st.style.display='none';
   }
   window.calcCC=buildTable;
   window.ccUpdate=function(idx,val){
@@ -1554,8 +1585,7 @@
       btn.setAttribute('data-phase',ph);
       btn.innerHTML='<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Adicionar etapa nesta fase';
       btn.addEventListener('click',function(){openModal(ph);});
-      if(target.nextSibling) target.parentNode.insertBefore(btn,target.nextSibling);
-      else target.parentNode.appendChild(btn);
+      try{ if(target.nextSibling&&target.nextSibling.parentNode===target.parentNode) target.parentNode.insertBefore(btn,target.nextSibling); else target.parentNode.appendChild(btn); }catch(e){ try{target.parentNode.appendChild(btn);}catch(e2){} }
     });
   }
 
@@ -1597,7 +1627,7 @@
         var s=loadState(); s.custom_tasks=(s.custom_tasks||[]).filter(function(x){return x.id!==task.id;});
         saveState(s); renderCustomTasks();
       });
-      btn.parentNode.insertBefore(wrap,btn);
+      try{ if(btn.parentNode) btn.parentNode.insertBefore(wrap,btn); }catch(e){}
     });
   }
 
@@ -1650,8 +1680,147 @@
   });
   obs.observe(document.body,{attributes:true});
 
-  /* run once on load if already internal */
-  if(document.body.classList.contains('internal-on')){ injectButtons(); renderCustomTasks(); }
+  /* run on load always — buttons stay hidden via CSS in client view, custom tasks show in both */
+  function _initAddTask(){ injectButtons(); renderCustomTasks(); }
+  if(document.readyState!=='loading') setTimeout(_initAddTask,250);
+  else document.addEventListener('DOMContentLoaded',function(){setTimeout(_initAddTask,250);});
+})();
+</script>
+
+
+<script>
+/* ── REORDENAR ETAPAS + RENUMERAR ── */
+(function(){
+  if(window._reorderReady) return; window._reorderReady=true;
+  var KEY='projeto_neon_lpncc';
+  function loadS(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function saveS(s){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+
+  function prefixOf(code){var m=String(code||'').match(/^([0-9]+[A-Z]?)\./);return m?m[1]:null;}
+
+  function blocksIn(tasksEl){
+    var out=[];
+    [].slice.call(tasksEl.querySelectorAll(':scope > label.task')).forEach(function(lbl){
+      var ti=lbl.nextElementSibling;
+      if(ti && !(ti.classList&&ti.classList.contains('taskint'))) ti=null;
+      var codeEl=lbl.querySelector('.code');
+      var inp=lbl.querySelector('input[type=checkbox]');
+      out.push({label:lbl,taskint:ti,codeEl:codeEl,id:inp?inp.id:null,
+        code:codeEl?codeEl.textContent.trim():''});
+    });
+    return out;
+  }
+
+  function renumber(){
+    [].slice.call(document.querySelectorAll('.tasks')).forEach(function(tasksEl){
+      var counters={};
+      blocksIn(tasksEl).forEach(function(b){
+        var pre=prefixOf(b.code); if(!pre) return;
+        counters[pre]=(counters[pre]||0)+1;
+        if(b.codeEl) b.codeEl.textContent=pre+'.'+counters[pre];
+      });
+    });
+  }
+
+  function saveOrder(){
+    var s=loadS(); s.order={};
+    [].slice.call(document.querySelectorAll('.phase')).forEach(function(ph,pi){
+      var tasksEl=ph.querySelector('.tasks'); if(!tasksEl) return;
+      s.order[pi]=blocksIn(tasksEl).map(function(b){return b.id;}).filter(Boolean);
+    });
+    saveS(s);
+  }
+
+  function applyOrder(){
+    var s=loadS();
+    if(s.order){
+      [].slice.call(document.querySelectorAll('.phase')).forEach(function(ph,pi){
+        var ord=s.order[pi]; if(!ord||!ord.length) return;
+        var tasksEl=ph.querySelector('.tasks'); if(!tasksEl) return;
+        var blocks=blocksIn(tasksEl);
+        var byId={}; blocks.forEach(function(b){if(b.id)byId[b.id]=b;});
+        /* find anchor: first non-task element (add-task btn / custom section) to insert before */
+        var anchor=null;
+        [].slice.call(tasksEl.children).forEach(function(c){
+          if(anchor) return;
+          if(c.classList&&(c.classList.contains('add-task-btn')||c.classList.contains('custom-task-section'))) anchor=c;
+        });
+        ord.forEach(function(id){
+          var b=byId[id]; if(!b) return;
+          if(anchor){ tasksEl.insertBefore(b.label,anchor); if(b.taskint) tasksEl.insertBefore(b.taskint,anchor); }
+          else { tasksEl.appendChild(b.label); if(b.taskint) tasksEl.appendChild(b.taskint); }
+        });
+      });
+    }
+    renumber();
+    updateDisabled();
+  }
+
+  function move(id,dir){
+    var lbl=document.getElementById(id); if(!lbl) return;
+    lbl=lbl.closest('label.task'); if(!lbl) return;
+    var tasksEl=lbl.parentNode;
+    var blocks=blocksIn(tasksEl);
+    var idx=-1; blocks.forEach(function(b,i){if(b.label===lbl)idx=i;});
+    if(idx<0) return;
+    var cur=blocks[idx];
+    var tIdx=dir<0?idx-1:idx+1;
+    if(tIdx<0||tIdx>=blocks.length) return;
+    var tgt=blocks[tIdx];
+    if(prefixOf(cur.code)!==prefixOf(tgt.code)) return; /* só dentro da fase */
+    if(dir<0){
+      tasksEl.insertBefore(cur.label,tgt.label);
+      if(cur.taskint) tasksEl.insertBefore(cur.taskint,tgt.label);
+    } else {
+      tasksEl.insertBefore(tgt.label,cur.label);
+      if(tgt.taskint) tasksEl.insertBefore(tgt.taskint,cur.label);
+    }
+    renumber(); saveOrder(); updateDisabled();
+  }
+
+  function updateDisabled(){
+    [].slice.call(document.querySelectorAll('.tasks')).forEach(function(tasksEl){
+      var blocks=blocksIn(tasksEl);
+      blocks.forEach(function(b,i){
+        if(!b.label) return;
+        var ro=b.label.querySelector('.reorder'); if(!ro) return;
+        var up=ro.querySelector('[data-dir="-1"]'), dn=ro.querySelector('[data-dir="1"]');
+        var prevSame=i>0 && prefixOf(blocks[i-1].code)===prefixOf(b.code);
+        var nextSame=i<blocks.length-1 && prefixOf(blocks[i+1].code)===prefixOf(b.code);
+        if(up) up.disabled=!prevSame;
+        if(dn) dn.disabled=!nextSame;
+      });
+    });
+  }
+
+  function injectControls(){
+    [].slice.call(document.querySelectorAll('label.task')).forEach(function(lbl){
+      if(lbl.querySelector('.reorder')) return;
+      var inp=lbl.querySelector('input[type=checkbox]'); if(!inp) return;
+      var id=inp.id;
+      var ro=document.createElement('span'); ro.className='reorder';
+      var up=document.createElement('button'); up.setAttribute('data-dir','-1'); up.title='Subir';
+      up.innerHTML='<svg viewBox="0 0 10 10" fill="none"><path d="M5 2L8 6H2z" fill="currentColor"/></svg>';
+      var dn=document.createElement('button'); dn.setAttribute('data-dir','1'); dn.title='Descer';
+      dn.innerHTML='<svg viewBox="0 0 10 10" fill="none"><path d="M5 8L2 4h6z" fill="currentColor"/></svg>';
+      up.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();move(id,-1);});
+      dn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();move(id,1);});
+      ro.appendChild(up); ro.appendChild(dn);
+      lbl.appendChild(ro);
+    });
+    updateDisabled();
+  }
+
+  function init(){ injectControls(); applyOrder(); }
+
+  /* run on load + when entering internal */
+  if(document.readyState!=='loading') setTimeout(init,200);
+  else document.addEventListener('DOMContentLoaded',function(){setTimeout(init,200);});
+
+  var obs=new MutationObserver(function(){
+    if(document.body.classList.contains('internal-on')) setTimeout(function(){injectControls();updateDisabled();},120);
+  });
+  if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 
