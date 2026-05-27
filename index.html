@@ -1602,26 +1602,45 @@
 
   /* ---- inject + buttons into each phase ---- */
   function injectButtons(){
+    // auto-corrige posições erradas de execuções anteriores (botão dentro de label.task)
+    fixMisplacedButtons();
     if(document.querySelectorAll('.add-task-btn').length>0) return;
     var phases=[0,1,2,3,4];
     phases.forEach(function(ph){
-      var cbs=[].slice.call(document.querySelectorAll('input[type=checkbox][data-phase="'+ph+'"]'));
+      // Pega só checkboxes NATIVOS (dentro de label.task), ignora os de custom tasks.
+      var cbs=[].slice.call(document.querySelectorAll('label.task input[type=checkbox][data-phase="'+ph+'"]'));
       if(!cbs.length) return;
-      var last=cbs[cbs.length-1];
-      /* walk forward to find the last taskint sibling */
-      var node=last, target=last;
-      while(node){
-        node=node.nextElementSibling;
-        if(!node) break;
-        if(node.classList&&node.classList.contains('taskint')) target=node;
-        if(node.tagName==='INPUT') break;
-      }
+      var lastInput=cbs[cbs.length-1];
+      var lastLabel=lastInput.closest('label.task');
+      if(!lastLabel) return;
+      // Procura o taskint logo depois do label (sibling no container .tasks)
+      var insertAfter=lastLabel;
+      var sib=lastLabel.nextElementSibling;
+      if(sib && sib.classList && sib.classList.contains('taskint')) insertAfter=sib;
       var btn=document.createElement('button');
       btn.className='add-task-btn';
       btn.setAttribute('data-phase',ph);
       btn.innerHTML='<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Adicionar etapa nesta fase';
       btn.addEventListener('click',function(){openModal(ph);});
-      try{ if(target.nextSibling&&target.nextSibling.parentNode===target.parentNode) target.parentNode.insertBefore(btn,target.nextSibling); else target.parentNode.appendChild(btn); }catch(e){ try{target.parentNode.appendChild(btn);}catch(e2){} }
+      try{
+        insertAfter.parentNode.insertBefore(btn, insertAfter.nextSibling);
+      }catch(e){
+        try{ insertAfter.parentNode.appendChild(btn); }catch(e2){}
+      }
+    });
+  }
+
+  /* Move botões ou custom-task-sections que tenham sido inseridos por engano
+     DENTRO de uma label.task pra fora — pro container .tasks correto. */
+  function fixMisplacedButtons(){
+    [].slice.call(document.querySelectorAll('label.task .add-task-btn, label.task .custom-task-section')).forEach(function(el){
+      var lbl = el.closest('label.task');
+      if(!lbl || !lbl.parentNode) return;
+      // move pra depois do label (e do taskint, se houver)
+      var insertAfter = lbl;
+      var sib = lbl.nextElementSibling;
+      if(sib && sib.classList && sib.classList.contains('taskint')) insertAfter = sib;
+      try{ insertAfter.parentNode.insertBefore(el, insertAfter.nextSibling); }catch(e){}
     });
   }
 
