@@ -374,6 +374,16 @@
   /* espaçamento entre tarefas na visão interna */
   body.internal-on .tasks > label.task{margin-top:6px}
 </style>
+<style>
+  /* Aba Fluxo (mapa de dependências) */
+  #sec-fluxo{display:none;position:fixed;inset:0;background:#f4f7f7;z-index:40}
+  #sec-fluxo iframe{width:100%;height:100%;border:0;display:block}
+  body.fluxo-on #sec-fluxo{display:block}
+  body.fluxo-on > .topbar{position:fixed;top:0;left:0;right:0;z-index:50}
+  body.fluxo-on > .wrap, body.fluxo-on > .intbar, body.fluxo-on > footer{display:none !important}
+  #sec-fluxo .close-fluxo{position:fixed;top:14px;right:18px;z-index:60;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--navy);cursor:pointer;box-shadow:0 2px 8px rgba(0,70,88,.08)}
+  #sec-fluxo .close-fluxo:hover{background:var(--navy);color:#fff}
+</style>
 <script src="sync-layer.js"></script>
 </head>
 <body>
@@ -385,6 +395,7 @@
     <div class="viewtoggle">
       <button id="btnCli" class="active" onclick="setView('cliente')">Visão do cliente</button>
       <button id="btnCon" onclick="event.stopPropagation();setView('contrato')">Contrato</button>
+      <button id="btnFlx" onclick="event.stopPropagation();setView('fluxo')">Fluxo</button>
     <button id="btnInt" onclick="askInternal()"><svg class="lk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Visão interna</button>
     </div>
   </div>
@@ -1823,6 +1834,70 @@
     if(document.body.classList.contains('internal-on')) setTimeout(function(){injectControls();updateDisabled();},120);
   });
   if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<!-- ABA FLUXO (mapa de dependências) -->
+<section id="sec-fluxo">
+  <button class="close-fluxo" onclick="setView(document.body.classList.contains('internal-on')?'interna':'cliente')">✕ Voltar</button>
+  <iframe id="fluxoFrame" src="fluxo.html" title="Fluxo de dependências"></iframe>
+</section>
+
+<script>
+/* ── Aba Fluxo: hook no setView pra enviar state via postMessage ── */
+(function(){
+  if(window._fluxoReady) return; window._fluxoReady=true;
+  var KEY='projeto_neon_lpncc';
+  var fluxoChildReady = false;
+
+  function getChecks(){
+    try{
+      var st = JSON.parse(localStorage.getItem(KEY)||'{}');
+      return st.checks || {};
+    }catch(e){ return {}; }
+  }
+  function sendChecks(){
+    var f = document.getElementById('fluxoFrame');
+    if(!f || !f.contentWindow) return;
+    try{
+      f.contentWindow.postMessage({type:'neon-checks', checks:getChecks()}, '*');
+    }catch(e){}
+  }
+
+  // Iframe avisa quando carregou (handshake): aí enviamos o state.
+  window.addEventListener('message', function(ev){
+    if(ev.data && ev.data.type==='neon-fluxo-ready'){
+      fluxoChildReady = true;
+      sendChecks();
+    }
+  });
+
+  // Decora setView pra ativar a classe fluxo-on e empurrar o state ao entrar.
+  var _origSV = window.setView;
+  window.setView = function(v){
+    if(v==='fluxo'){
+      document.body.classList.remove('contrato-on');
+      document.body.classList.add('fluxo-on');
+      if(fluxoChildReady) sendChecks();
+      return;
+    }
+    document.body.classList.remove('fluxo-on');
+    if(_origSV) _origSV(v);
+  };
+
+  // Polling leve pra detectar mudanças no state.checks e propagar pro iframe.
+  // (Não usamos monkey-patch em setItem porque o sync-layer.js também faz isso,
+  // e a ordem de boot deixaria nosso patch perdido.)
+  var _lastSig = '';
+  setInterval(function(){
+    if(!fluxoChildReady) return;
+    var sig;
+    try{ sig = JSON.stringify(getChecks()); }catch(e){ sig = ''; }
+    if(sig !== _lastSig){
+      _lastSig = sig;
+      sendChecks();
+    }
+  }, 800);
 })();
 </script>
 

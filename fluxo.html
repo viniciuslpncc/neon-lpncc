@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Projeto Neon — Grafo de Dependências</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#004658;--sage:#BCCCCE;--gray:#87868a;--ink:#0e2f38;--line:#e4eaea;--soft:#f2f6f6}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:#f4f7f7}
+#top{position:fixed;top:0;left:0;right:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+#top h1{font-family:'Lora',serif;color:var(--navy);font-size:18px;font-weight:600}
+#top .sub{font-size:12px;color:var(--gray)}
+.legend{display:flex;gap:16px;margin-left:auto;flex-wrap:wrap;font-size:11px;color:var(--ink);align-items:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.lz{width:22px;height:0;border-top-width:2px;border-top-style:solid}
+.btnz{display:flex;gap:6px;margin-left:14px}
+.btnz button{font-size:11px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:6px;padding:6px 11px;cursor:pointer}
+.btnz button:hover{background:var(--navy);color:#fff}
+#stage{position:absolute;inset:0;top:0;cursor:grab}
+#stage.drag{cursor:grabbing}
+#world{position:absolute;top:0;left:0;transform-origin:0 0}
+svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
+.node{position:absolute;width:230px;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 3px 14px rgba(0,70,88,.07);cursor:grab;user-select:none;transition:box-shadow .15s,border-color .15s}
+.node:hover{box-shadow:0 8px 26px rgba(0,70,88,.16);border-color:var(--sage);z-index:5}
+.node.dragging{cursor:grabbing;box-shadow:0 14px 36px rgba(0,70,88,.24);z-index:8}
+.node .hd{padding:11px 14px 9px;border-radius:11px 11px 0 0;font-family:'Lora',serif;font-weight:600;font-size:13.5px;line-height:1.25;border-bottom:1px solid var(--line)}
+.node .bd{padding:9px 14px 12px;display:flex;flex-direction:column;gap:4px}
+.node .bd li{list-style:none;font-size:11.5px;color:var(--ink);line-height:1.4;padding-left:13px;position:relative}
+.node .bd li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--sage)}
+/* phase tints */
+.p0 .hd{background:#eef3f3;color:var(--navy)}
+.p1 .hd{background:var(--navy);color:#fff}
+.p2 .hd{background:#e8f0ef;color:var(--navy)}
+.p3 .hd{background:#f4f1ea;color:#6a5a3a}
+.ph .hd{background:#fff5e8;color:#8a5a12}  /* aprovação humana */
+.p2b .hd{background:#fbecec;color:#8a3030}  /* condicional */
+.node.dim{opacity:.25}
+.node.hl{border-color:var(--navy);box-shadow:0 10px 30px rgba(0,70,88,.22)}
+/* progresso vindo do painel (state.checks) */
+.node .badge{position:absolute;top:-9px;right:-9px;background:#fff;border:1.5px solid var(--sage);color:var(--gray);font-size:10px;font-weight:700;padding:2px 7px;border-radius:11px;letter-spacing:.04em;line-height:1.2;box-shadow:0 1px 3px rgba(0,70,88,.06);transition:all .2s}
+.node.progress .badge{border-color:#b0942e;color:#8a6e1c;background:#fff8e8}
+.node.done .badge{border-color:#1a8a5a;background:#1a8a5a;color:#fff}
+.node.done{border-color:#1a8a5a;box-shadow:0 4px 16px rgba(26,138,90,.18)}
+.node.done .hd{position:relative}
+.node.done .hd::after{content:'✓';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#1a8a5a;font-weight:700;font-size:15px}
+.tagm{position:absolute;font-family:'Lato';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);pointer-events:none}
+#hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,70,88,.9);color:#fff;font-size:11.5px;padding:7px 16px;border-radius:20px;z-index:20}
+</style></head>
+<body>
+<div id="top">
+  <div><h1>Projeto Neon — fluxo de dependências</h1><div class="sub">Arraste os nós · clique pra destacar a cadeia · o que destrava o quê</div></div>
+  <div class="legend">
+    <span><span class="lz" style="border-color:#004658"></span>fluxo</span>
+    <span><span class="lz" style="border-color:#1a8a5a;border-top-style:solid"></span>destrava</span>
+    <span><span class="lz" style="border-color:#b0942e;border-top-style:dashed"></span>alimenta</span>
+    <span><span class="lz" style="border-color:#b03030;border-top-style:dashed"></span>condicional</span>
+    <span class="btnz"><button id="reset">Centralizar</button></span>
+  </div>
+</div>
+<div id="stage">
+  <div id="world">
+    <svg class="links" id="links"></svg>
+  </div>
+</div>
+<div id="hint">Dica: arraste o fundo pra mover · scroll pra zoom · arraste um nó pra reposicionar</div>
+
+<script>
+// Mapa: cada node do grafo → array de IDs de etapa do painel principal
+// (etapas no formato fX-Y onde X=fase e Y=número dentro da fase)
+var NODE_TO_TASKS = {
+  "0.1":     ["f0-1"],
+  "0.cad":   ["f0-2","f0-3"],
+  "0.forn":  ["f0-4","f0-5","f0-6"],
+  "0.infra": ["f0-7","f0-8"],
+  "1.base":  ["f1-1"],
+  "1.read":  ["f1-2"],
+  "1.cot":   ["f1-3"],
+  "1.ap1":   ["f1-4"],
+  "1.cus":   ["f1-5"],
+  "1.preco": ["f1-6"],
+  "1.ap2":   ["f1-7"],
+  "1.prop":  ["f1-8"],
+  "1.resp":  ["f1-9"],
+  "1.crm":   ["f1-10"],
+  "2.lib":   ["f2-1"],
+  "2.icp":   ["f2-2","f2-3","f2-4"],
+  "2.prosp": ["f2-5","f2-6","f2-9"],
+  "2.dia":   ["f2-7","f2-8","f2-10"],
+  "3.painel":["f3-1"],
+  "3.mae":   ["f3-2"],
+  "3.sla":   ["f3-3"],
+  "3.reu":   ["f3-4"],
+  "3.doc":   ["f3-5"],
+  "2b.check":["f4-1"],
+  "2b.marg": ["f4-2"],
+  "2b.plat": ["f4-3","f4-4"],
+  "2b.acomp":["f4-5"]
+};
+
+var NODES=[{"id": "0.1", "ph": 0, "t": "Diagnóstico", "sub": ["Por que o lab caiu", "Cliente saindo × comprando menos"], "x": 40, "y": 40}, {"id": "0.cad", "ph": 0, "t": "Cadastro & Produto", "sub": ["0.2 Auditar cadastro", "0.3 Código único por tipo/área"], "x": 40, "y": 200}, {"id": "0.forn", "ph": 0, "t": "Fornecedores & Preço", "sub": ["0.4 Produto↔fornecedor", "0.5 Regras de preço", "0.6 Tabela de frete"], "x": 40, "y": 370}, {"id": "0.infra", "ph": 0, "t": "Infraestrutura", "sub": ["0.7 Novo sistema comercial", "0.8 Acesso remoto"], "x": 40, "y": 560}, {"id": "1.base", "ph": 1, "t": "1.1 Base de conexão", "sub": ["Liga os sistemas", "Orquestra o fluxo"], "x": 380, "y": 480}, {"id": "1.read", "ph": 1, "t": "1.2 Leitura de pedidos", "sub": ["E-mail + PDF automáticos"], "x": 380, "y": 330}, {"id": "1.cot", "ph": 1, "t": "1.3 Abertura de cotação", "sub": ["Fornecedores certos"], "x": 380, "y": 190}, {"id": "1.ap1", "ph": "h", "t": "1.4 ✋ Aprovação: cotação", "sub": ["Humano libera o envio"], "x": 700, "y": 190}, {"id": "1.cus", "ph": 1, "t": "1.5 Receber custos", "sub": ["Respostas dos fornecedores"], "x": 700, "y": 330}, {"id": "1.preco", "ph": 1, "t": "1.6 Cálculo de preço", "sub": ["Automático no painel"], "x": 700, "y": 470}, {"id": "1.ap2", "ph": "h", "t": "1.7 ✋ Aprovação: preço", "sub": ["Humano valida o final"], "x": 1020, "y": 470}, {"id": "1.prop", "ph": 1, "t": "1.8 Proposta automática", "sub": ["Padrão Neon"], "x": 1020, "y": 330}, {"id": "1.resp", "ph": 1, "t": "1.9 Resposta ao cliente", "sub": ["Pronta pra envio"], "x": 1020, "y": 190}, {"id": "1.crm", "ph": 1, "t": "1.10 CRM + medição", "sub": ["Registro + tempo economizado"], "x": 1340, "y": 190}, {"id": "3.mae", "ph": 3, "t": "3.2 ★ Indicador-mãe", "sub": ["% tempo do comercial", "Operacional → venda"], "x": 1340, "y": 380}, {"id": "3.sla", "ph": 3, "t": "3.3 Indicadores de prazo", "sub": ["Resposta + tempo de cotação"], "x": 1340, "y": 560}, {"id": "3.painel", "ph": 3, "t": "3.1 Painel gerencial", "sub": ["ABC, margem, conversão", "Perda de clientes"], "x": 40, "y": 740}, {"id": "3.reu", "ph": 3, "t": "3.4 Reunião semanal", "sub": ["Dados na mesa"], "x": 340, "y": 740}, {"id": "3.doc", "ph": 3, "t": "3.5 Passagem de bastão", "sub": ["Documentação", "Neon toca sozinha"], "x": 1340, "y": 740}, {"id": "2.lib", "ph": 2, "t": "2.1 Liberação comercial", "sub": ["Medição confirma:", "comercial saiu do operacional"], "x": 680, "y": 680}, {"id": "2.icp", "ph": 2, "t": "Estratégia & Dados", "sub": ["2.4 Perfil cliente ideal", "2.2 Histórico de preços", "2.3 Funil + e-mail"], "x": 680, "y": 850}, {"id": "2.prosp", "ph": 2, "t": "Prospecção & Relação", "sub": ["2.5 Prospecção IA", "2.6 Resumo + ritmo", "2.9 Retomada laboratório"], "x": 1010, "y": 850}, {"id": "2.dia", "ph": 2, "t": "2.10 Dia do comercial", "sub": ["2.7 Agenda viva", "2.8 Recompra/pós-venda", "Prioridades + retornos"], "x": 1340, "y": 850}, {"id": "2b.check", "ph": "2b", "t": "2B.1 Checagem prontidão", "sub": ["5 pré-requisitos:", "preço, fornecedor, SLA,", "proposta, CRM"], "x": 340, "y": 1010}, {"id": "2b.marg", "ph": "2b", "t": "2B.2 Margem mínima", "sub": ["Para disputa"], "x": 680, "y": 1010}, {"id": "2b.plat", "ph": "2b", "t": "2B.3/4 Plataformas", "sub": ["BIONEXO", "Mercado Eletrônico"], "x": 1010, "y": 1010}, {"id": "2b.acomp", "ph": "2b", "t": "2B.5 Acompanhamento", "sub": ["Prazo + taxa de ganho"], "x": 1340, "y": 1010}];
+var EDGES=[["0.cad", "0.forn", "flow"], ["0.infra", "1.base", "feed"], ["1.base", "1.read", "flow"], ["1.read", "1.cot", "flow"], ["0.forn", "1.cot", "feed"], ["1.cot", "1.ap1", "flow"], ["1.ap1", "1.cus", "flow"], ["1.cus", "1.preco", "flow"], ["0.forn", "1.preco", "feed"], ["1.preco", "1.ap2", "flow"], ["1.ap2", "1.prop", "flow"], ["1.prop", "1.resp", "flow"], ["1.resp", "1.crm", "flow"], ["0.infra", "1.crm", "feed"], ["1.crm", "3.mae", "feed"], ["3.mae", "2.lib", "unlock"], ["2.lib", "2.icp", "unlock"], ["2.icp", "2.prosp", "flow"], ["2.prosp", "2.dia", "flow"], ["1.preco", "2b.check", "cond"], ["1.prop", "2b.check", "cond"], ["1.crm", "2b.check", "cond"], ["3.sla", "2b.check", "cond"], ["2b.check", "2b.marg", "flow"], ["2b.marg", "2b.plat", "flow"], ["2b.plat", "2b.acomp", "flow"], ["2.dia", "2b.check", "cond"], ["3.painel", "3.reu", "flow"]];
+var EKIND={flow:{c:'#004658',d:'0'},unlock:{c:'#1a8a5a',d:'0'},feed:{c:'#b0942e',d:'6,5'},cond:{c:'#b03030',d:'6,5'}};
+var world=document.getElementById('world'), svg=document.getElementById('links'), stage=document.getElementById('stage');
+var NW=230;
+var pos={}, els={};
+
+NODES.forEach(function(n){
+  pos[n.id]={x:n.x,y:n.y};
+  var d=document.createElement('div');
+  d.className='node p'+n.ph; d.dataset.id=n.id;
+  d.style.left=n.x+'px'; d.style.top=n.y+'px';
+  var totalTasks = (NODE_TO_TASKS[n.id]||[]).length;
+  var badge = totalTasks>0 ? '<span class="badge" data-badge="'+n.id+'">0/'+totalTasks+'</span>' : '';
+  d.innerHTML=badge+'<div class="hd">'+n.t+'</div><ul class="bd">'+n.sub.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
+  world.appendChild(d); els[n.id]=d;
+});
+
+// ── aplica estado de checks (recebido do painel pai ou lido do localStorage) ──
+function applyChecks(checks){
+  checks = checks || {};
+  Object.keys(NODE_TO_TASKS).forEach(function(nid){
+    var el = els[nid]; if(!el) return;
+    var tasks = NODE_TO_TASKS[nid];
+    var done = tasks.filter(function(t){return !!checks[t];}).length;
+    var total = tasks.length;
+    el.classList.toggle('done', done===total && total>0);
+    el.classList.toggle('progress', done>0 && done<total);
+    var b = el.querySelector('.badge');
+    if(b) b.textContent = done+'/'+total;
+  });
+}
+
+// Recebe state do painel pai (postMessage)
+window.addEventListener('message', function(ev){
+  if(!ev.data || typeof ev.data!=='object') return;
+  if(ev.data.type==='neon-checks') applyChecks(ev.data.checks);
+});
+
+// Fallback standalone: se aberto direto (não em iframe), tenta ler localStorage
+// e revalida a cada 2s (caso o usuário tenha o painel aberto em outra aba).
+function pollLocal(){
+  try{
+    var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+    if(st && st.checks) applyChecks(st.checks);
+  }catch(e){}
+}
+if(window.parent === window){
+  pollLocal();
+  setInterval(pollLocal, 2000);
+} else {
+  // Está num iframe → avisa o pai que está pronto pra receber state
+  try{ window.parent.postMessage({type:'neon-fluxo-ready'}, '*'); }catch(e){}
+}
+
+function nodeH(id){return els[id].offsetHeight;}
+function center(id){return {x:pos[id].x+NW/2, y:pos[id].y+nodeH(id)/2};}
+
+function drawLinks(){
+  var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  NODES.forEach(function(n){minx=Math.min(minx,pos[n.id].x);miny=Math.min(miny,pos[n.id].y);maxx=Math.max(maxx,pos[n.id].x+NW);maxy=Math.max(maxy,pos[n.id].y+nodeH(n.id));});
+  svg.setAttribute('width',maxx+200); svg.setAttribute('height',maxy+200);
+  var defs='<defs>';
+  Object.keys(EKIND).forEach(function(k){defs+='<marker id="ar-'+k+'" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="'+EKIND[k].c+'"/></marker>';});
+  defs+='</defs>';
+  var paths='';
+  EDGES.forEach(function(e){
+    var a=center(e[0]), b=center(e[1]); if(!a||!b)return;
+    var k=EKIND[e[2]]||EKIND.flow;
+    // orthogonal-ish curve
+    var dx=b.x-a.x, dy=b.y-a.y;
+    var mx=a.x+dx*0.5;
+    var path='M'+a.x+','+a.y+' C'+mx+','+a.y+' '+mx+','+b.y+' '+b.x+','+b.y;
+    paths+='<path d="'+path+'" fill="none" stroke="'+k.c+'" stroke-width="2" stroke-dasharray="'+k.d+'" marker-end="url(#ar-'+e[2]+')" data-from="'+e[0]+'" data-to="'+e[1]+'" opacity="0.62"/>';
+  });
+  svg.innerHTML=defs+paths;
+}
+drawLinks();
+
+// ── highlight chain on click ──
+function clearHL(){Object.values(els).forEach(function(d){d.classList.remove('dim','hl');});svg.querySelectorAll('path').forEach(function(p){p.style.opacity='0.62';p.setAttribute('stroke-width','2');});}
+function highlight(id){
+  clearHL();
+  var keep={}; keep[id]=1;
+  // upstream + downstream (1 hop each direction, recursive downstream)
+  function down(x){EDGES.forEach(function(e){if(e[0]===x&&!keep[e[1]]){keep[e[1]]=1;down(e[1]);}});}
+  function up(x){EDGES.forEach(function(e){if(e[1]===x&&!keep[e[0]]){keep[e[0]]=1;up(e[0]);}});}
+  down(id); up(id);
+  Object.keys(els).forEach(function(k){ if(!keep[k]) els[k].classList.add('dim'); }); 
+  els[id].classList.add('hl');
+  svg.querySelectorAll('path').forEach(function(p){ if(keep[p.dataset.from]&&keep[p.dataset.to]){p.style.opacity='1';p.setAttribute('stroke-width','3');} else {p.style.opacity='0.08';} });
+}
+
+// ── dragging nodes ──
+var dragNode=null, dragOff={x:0,y:0}, moved=false;
+Object.values(els).forEach(function(d){
+  d.addEventListener('mousedown',function(ev){
+    ev.stopPropagation(); dragNode=d; moved=false;
+    var id=d.dataset.id;
+    dragOff.x=ev.clientX/scale - pos[id].x; dragOff.y=ev.clientY/scale - pos[id].y;
+    d.classList.add('dragging');
+  });
+});
+window.addEventListener('mousemove',function(ev){
+  if(dragNode){
+    moved=true;
+    var id=dragNode.dataset.id;
+    pos[id].x=ev.clientX/scale - dragOff.x; pos[id].y=ev.clientY/scale - dragOff.y;
+    dragNode.style.left=pos[id].x+'px'; dragNode.style.top=pos[id].y+'px';
+    drawLinks();
+  } else if(panning){
+    tx=startTx+(ev.clientX-panStart.x); ty=startTy+(ev.clientY-panStart.y); applyT();
+  }
+});
+window.addEventListener('mouseup',function(ev){
+  if(dragNode){ dragNode.classList.remove('dragging'); if(!moved) highlight(dragNode.dataset.id); dragNode=null; }
+  panning=false; stage.classList.remove('drag');
+});
+
+// ── pan + zoom ──
+var scale=0.72, tx=40, ty=70, panning=false, panStart={x:0,y:0}, startTx=0, startTy=0;
+function applyT(){ world.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')'; }
+applyT();
+stage.addEventListener('mousedown',function(ev){ panning=true; panStart={x:ev.clientX,y:ev.clientY}; startTx=tx; startTy=ty; stage.classList.add('drag'); });
+stage.addEventListener('wheel',function(ev){
+  ev.preventDefault();
+  var f=ev.deltaY<0?1.1:0.9; var ns=Math.min(2,Math.max(0.3,scale*f));
+  var rx=(ev.clientX-tx)/scale, ry=(ev.clientY-ty)/scale;
+  scale=ns; tx=ev.clientX-rx*scale; ty=ev.clientY-ry*scale; applyT();
+},{passive:false});
+// click empty bg clears highlight
+stage.addEventListener('click',function(ev){ if(ev.target===stage||ev.target===world||ev.target===svg) clearHL(); });
+document.getElementById('reset').addEventListener('click',function(){scale=0.72;tx=40;ty=70;applyT();clearHL();});
+setTimeout(function(){document.getElementById('hint').style.opacity='0';document.getElementById('hint').style.transition='opacity .6s';},4500);
+</script>
+</body></html>
