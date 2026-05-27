@@ -43,11 +43,12 @@ svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
 .node.done{border-color:#1a8a5a;box-shadow:0 4px 16px rgba(26,138,90,.18)}
 .node.done .hd{position:relative}
 .node.done .hd::after{content:'✓';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#1a8a5a;font-weight:700;font-size:15px}
-/* nodes "Adicionadas à Fase X" — começam escondidos, aparecem se há custom tasks */
-.node.extra{display:none;border-style:dashed;background:#fcfcfa}
-.node.extra.has-tasks{display:block}
-.node.extra .hd{background:#fff3d6;color:#7a5d12;font-size:12px}
-.node.extra .bd li{font-size:11px;color:#7a5d12}
+/* nodes próprios das custom tasks (cada etapa adicionada vira um node) */
+.node.custom-task-node{border-style:dashed;border-color:#b0942e;background:#fcfaf2}
+.node.custom-task-node .hd{background:#fff3d6;color:#7a5d12;font-size:12.5px}
+.node.custom-task-node .bd li{font-size:11px;color:#7a5d12}
+.node.custom-task-node.done{border-color:#1a8a5a;background:#f2faf5}
+.node.custom-task-node.done .hd{background:#e3f3e9;color:#1a8a5a}
 .tagm{position:absolute;font-family:'Lato';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);pointer-events:none}
 #hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,70,88,.9);color:#fff;font-size:11.5px;padding:7px 16px;border-radius:20px;z-index:20}
 </style></head>
@@ -109,32 +110,115 @@ var world=document.getElementById('world'), svg=document.getElementById('links')
 var NW=230;
 var pos={}, els={};
 
-// Adiciona nodes virtuais "Adicionadas à Fase X" (um por fase), à direita do canvas.
-// Eles ficam escondidos por padrão e só aparecem se houver custom tasks daquela fase.
-[0,1,2,3,4].forEach(function(p){
-  NODES.push({
-    id: 'extra.'+p,
-    ph: 'extra',
-    t: 'Adicionadas à Fase '+p,
-    sub: ['(nenhuma)'],
-    x: 1640,
-    y: 40 + p*200
-  });
-});
-
+// Cria nodes nativos (definidos em NODES). Custom tasks são adicionadas
+// dinamicamente em applyChecks como nodes próprios com prefixo "ct.".
 NODES.forEach(function(n){
   pos[n.id]={x:n.x,y:n.y};
   var d=document.createElement('div');
   d.className='node p'+n.ph; d.dataset.id=n.id;
-  if(String(n.id).indexOf('extra.')===0) d.classList.add('extra');
   d.style.left=n.x+'px'; d.style.top=n.y+'px';
   var totalTasks = (NODE_TO_TASKS[n.id]||[]).length;
-  var badge = totalTasks>0 || String(n.id).indexOf('extra.')===0
+  var badge = totalTasks>0
     ? '<span class="badge" data-badge="'+n.id+'">0/'+totalTasks+'</span>'
     : '';
   d.innerHTML=badge+'<div class="hd">'+n.t+'</div><ul class="bd">'+n.sub.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
   world.appendChild(d); els[n.id]=d;
 });
+
+// Posicionamento default das custom tasks: coluna à direita do canvas,
+// agrupadas por fase. Usuário pode arrastar pra reposicionar.
+function defaultCustomPos(phase, idxInPhase){
+  var col = idxInPhase % 2; // 2 colunas pra evitar muito comprimento vertical
+  var row = Math.floor(idxInPhase / 2);
+  return {
+    x: 1640 + col*270,
+    y: 40 + phase*240 + row*180
+  };
+}
+
+// Atualiza/sincroniza os nodes de custom tasks no DOM.
+// Remove nodes obsoletos, cria novos, atualiza existentes.
+function syncCustomNodes(customTasks, checks){
+  customTasks = customTasks || [];
+  checks = checks || {};
+  // Mapa de ids esperados
+  var expected = {};
+  customTasks.forEach(function(t){ expected['ct.'+t.id] = t; });
+
+  // Remove nodes que não estão mais
+  Object.keys(els).forEach(function(nid){
+    if(nid.indexOf('ct.')===0 && !expected[nid]){
+      els[nid].remove();
+      delete els[nid];
+      delete pos[nid];
+    }
+  });
+
+  // Agrupa custom tasks por fase pra posicionar
+  var byPhase = {};
+  customTasks.forEach(function(t){ (byPhase[t.phase] = byPhase[t.phase]||[]).push(t); });
+
+  // Cria/atualiza nodes
+  Object.keys(byPhase).forEach(function(ph){
+    byPhase[ph].forEach(function(t, idx){
+      var nid = 'ct.'+t.id;
+      var done = !!checks[t.id];
+      var existed = !!els[nid];
+      var d = els[nid];
+      if(!d){
+        // Calcula posição default (mantém se já foi arrastada)
+        var p = defaultCustomPos(t.phase, idx);
+        pos[nid] = {x: p.x, y: p.y};
+        d = document.createElement('div');
+        d.className = 'node p'+t.phase+' custom-task-node';
+        d.dataset.id = nid;
+        d.style.left = p.x+'px'; d.style.top = p.y+'px';
+        world.appendChild(d);
+        els[nid] = d;
+        // Bind drag (mesmo padrão dos outros nodes)
+        d.addEventListener('mousedown', function(ev){
+          ev.stopPropagation(); dragNode=d; moved=false;
+          dragOff.x=ev.clientX/scale - pos[nid].x; dragOff.y=ev.clientY/scale - pos[nid].y;
+          d.classList.add('dragging');
+        });
+      }
+      // Update content
+      var bd = [];
+      if(t.code) bd.push(t.code);
+      if(t.oque) bd.push(t.oque);
+      var subHtml = bd.length ? bd.map(function(s){return '<li>'+String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</li>';}).join('') : '<li style="color:#bcb09a">sem descrição</li>';
+      d.innerHTML = '<span class="badge" data-badge="'+nid+'">'+(done?'1/1':'0/1')+'</span>'
+        +'<div class="hd">'+String(t.title||'(sem título)').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>'
+        +'<ul class="bd">'+subHtml+'</ul>';
+      d.classList.toggle('done', done);
+      d.classList.toggle('progress', false);
+    });
+  });
+}
+
+// Gera edges das custom tasks a partir de depends_on / unlocks.
+function customEdges(customTasks){
+  customTasks = customTasks || [];
+  var out = [];
+  customTasks.forEach(function(t){
+    var ctNid = 'ct.'+t.id;
+    (t.depends_on||[]).forEach(function(dep){
+      // Só conecta se o node existir no grafo nativo
+      if(els[dep]) out.push([dep, ctNid, 'flow']);
+    });
+    (t.unlocks||[]).forEach(function(unl){
+      if(els[unl]) out.push([ctNid, unl, 'unlock']);
+    });
+  });
+  return out;
+}
+
+// Re-desenha edges combinando as nativas com as das custom tasks.
+var BASE_EDGES = EDGES.slice();
+function rebuildEdges(customTasks){
+  EDGES = BASE_EDGES.concat(customEdges(customTasks));
+  drawLinks();
+}
 
 // ── aplica estado de checks + custom tasks (recebido do painel ou lido do localStorage) ──
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -154,29 +238,9 @@ function applyChecks(checks, customTasks){
     if(b) b.textContent = done+'/'+total;
   });
 
-  // 2) Nodes virtuais "Adicionadas à Fase X": agrupa custom tasks por fase
-  [0,1,2,3,4].forEach(function(p){
-    var nid = 'extra.'+p;
-    var el = els[nid]; if(!el) return;
-    var ofPhase = customTasks.filter(function(t){return String(t.phase)===String(p);});
-    var total = ofPhase.length;
-    var done = ofPhase.filter(function(t){return !!checks[t.id];}).length;
-    el.classList.toggle('has-tasks', total>0);
-    el.classList.toggle('done', total>0 && done===total);
-    el.classList.toggle('progress', done>0 && done<total);
-    var b = el.querySelector('.badge');
-    if(b) b.textContent = done+'/'+total;
-    // re-render do bd com os títulos das custom tasks
-    var bd = el.querySelector('.bd');
-    if(bd){
-      bd.innerHTML = total
-        ? ofPhase.map(function(t){
-            var mark = checks[t.id] ? '✓ ' : '';
-            return '<li>'+mark+escHtml(t.code)+' '+escHtml(t.title)+'</li>';
-          }).join('')
-        : '<li style="color:#bcb09a">(nenhuma)</li>';
-    }
-  });
+  // 2) Nodes próprios das custom tasks + edges baseadas em depends_on/unlocks
+  syncCustomNodes(customTasks, checks);
+  rebuildEdges(customTasks);
 }
 
 // Recebe state do painel pai (postMessage)
@@ -206,7 +270,14 @@ function center(id){return {x:pos[id].x+NW/2, y:pos[id].y+nodeH(id)/2};}
 
 function drawLinks(){
   var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
-  NODES.forEach(function(n){minx=Math.min(minx,pos[n.id].x);miny=Math.min(miny,pos[n.id].y);maxx=Math.max(maxx,pos[n.id].x+NW);maxy=Math.max(maxy,pos[n.id].y+nodeH(n.id));});
+  // Itera por TODOS os nodes presentes (nativos + custom tasks dinâmicas)
+  Object.keys(els).forEach(function(id){
+    if(!pos[id]) return;
+    minx=Math.min(minx,pos[id].x);
+    miny=Math.min(miny,pos[id].y);
+    maxx=Math.max(maxx,pos[id].x+NW);
+    maxy=Math.max(maxy,pos[id].y+nodeH(id));
+  });
   svg.setAttribute('width',maxx+200); svg.setAttribute('height',maxy+200);
   var defs='<defs>';
   Object.keys(EKIND).forEach(function(k){defs+='<marker id="ar-'+k+'" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="'+EKIND[k].c+'"/></marker>';});

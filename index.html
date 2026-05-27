@@ -338,6 +338,10 @@
   body.internal-on .custom-task-item .ct-title:hover{background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px var(--line)}
   body.internal-on .custom-task-item .ct-title:focus{background:#fff;box-shadow:inset 0 0 0 1.5px var(--navy)}
   .custom-task-item .ct-det{font-size:11.5px;color:var(--gray);line-height:1.55;margin-top:4px}
+  .custom-task-item .ct-rel{font-size:11px;color:var(--navy);line-height:1.5;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+  .custom-task-item .ct-edit{background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 4px;display:none}
+  .custom-task-item .ct-edit:hover{color:var(--navy)}
+  body.internal-on .custom-task-item .ct-edit{display:inline-block}
   /* checkbox da custom task — mesmo visual do .box nativo */
   .custom-task-item .ct-check{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0}
   .custom-task-item .ct-check input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
@@ -1515,18 +1519,56 @@
 
 <div class="modal-bg" id="addTaskModal">
   <div class="modal-card">
-    <h3>Adicionar etapa</h3>
+    <h3 id="addTaskModalTitle">Adicionar etapa</h3>
     <div class="modal-field"><label>Código (ex: 2.11, N.1)</label><input type="text" id="newTaskCode" placeholder="ex: 2.11"></div>
     <div class="modal-field"><label>Título da etapa *</label><input type="text" id="newTaskTitle" placeholder="Descreva o que esta etapa faz"></div>
     <div class="modal-field"><label>O quê</label><textarea id="newTaskOque" placeholder="O que é esta etapa?"></textarea></div>
     <div class="modal-field"><label>Pra quê</label><textarea id="newTaskPraque" placeholder="Qual o objetivo desta etapa?"></textarea></div>
     <div class="modal-field"><label>Como</label><textarea id="newTaskComo" placeholder="Como será executada?"></textarea></div>
+    <div class="modal-field"><label>Depende de <span style="color:var(--gray);font-weight:400">(segura Cmd/Ctrl pra escolher vários)</span></label><select id="newTaskDepends" multiple size="6" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:6px;font-size:12px;font-family:inherit"></select></div>
+    <div class="modal-field"><label>Destrava <span style="color:var(--gray);font-weight:400">(o que esta etapa libera)</span></label><select id="newTaskUnlocks" multiple size="6" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:6px;font-size:12px;font-family:inherit"></select></div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeAddTaskModal()">Cancelar</button>
-      <button class="modal-btn primary" onclick="confirmAddTask()">Adicionar</button>
+      <button class="modal-btn primary" id="addTaskModalConfirm" onclick="confirmAddTask()">Adicionar</button>
     </div>
   </div>
 </div>
+
+<script>
+/* ── Lista única dos nodes nativos do fluxo (id + label + fase) ──
+   Compartilhada entre o modal (pra popular selects) e o fluxo.html. */
+window.NEON_FLUXO_NODES = [
+  {id:'0.1',     phase:0, label:'0.1 — Diagnóstico'},
+  {id:'0.cad',   phase:0, label:'Cadastro & Produto (0.2, 0.3)'},
+  {id:'0.forn',  phase:0, label:'Fornecedores & Preço (0.4, 0.5, 0.6)'},
+  {id:'0.infra', phase:0, label:'Infraestrutura (0.7, 0.8)'},
+  {id:'1.base',  phase:1, label:'1.1 — Base de conexão'},
+  {id:'1.read',  phase:1, label:'1.2 — Leitura de pedidos'},
+  {id:'1.cot',   phase:1, label:'1.3 — Abertura de cotação'},
+  {id:'1.ap1',   phase:1, label:'1.4 — ✋ Aprovação: cotação'},
+  {id:'1.cus',   phase:1, label:'1.5 — Receber custos'},
+  {id:'1.preco', phase:1, label:'1.6 — Cálculo de preço'},
+  {id:'1.ap2',   phase:1, label:'1.7 — ✋ Aprovação: preço'},
+  {id:'1.prop',  phase:1, label:'1.8 — Proposta automática'},
+  {id:'1.resp',  phase:1, label:'1.9 — Resposta ao cliente'},
+  {id:'1.crm',   phase:1, label:'1.10 — CRM + medição'},
+  {id:'2.lib',   phase:2, label:'2.1 — Liberação comercial'},
+  {id:'2.icp',   phase:2, label:'Estratégia & Dados (2.2, 2.3, 2.4)'},
+  {id:'2.prosp', phase:2, label:'Prospecção & Relação (2.5, 2.6, 2.9)'},
+  {id:'2.dia',   phase:2, label:'Dia do comercial (2.7, 2.8, 2.10)'},
+  {id:'3.painel',phase:3, label:'3.1 — Painel gerencial'},
+  {id:'3.mae',   phase:3, label:'3.2 — ★ Indicador-mãe'},
+  {id:'3.sla',   phase:3, label:'3.3 — Indicadores de prazo'},
+  {id:'3.reu',   phase:3, label:'3.4 — Reunião semanal'},
+  {id:'3.doc',   phase:3, label:'3.5 — Passagem de bastão'},
+  {id:'2b.check',phase:4, label:'2B.1 — Checagem prontidão'},
+  {id:'2b.marg', phase:4, label:'2B.2 — Margem mínima'},
+  {id:'2b.plat', phase:4, label:'2B.3/4 — Plataformas'},
+  {id:'2b.acomp',phase:4, label:'2B.5 — Acompanhamento'}
+];
+window.NEON_FLUXO_NODE_BY_ID = {};
+window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=n; });
+</script>
 <script>
 (function(){ var CC_KEY='neon_cc_fat';
   var MONTHS=[
@@ -1665,6 +1707,16 @@
       if(task.oque)   detParts.push('<b>O qu\u00ea:</b> '+esc(task.oque));
       if(task.praque) detParts.push('<b>Pra qu\u00ea:</b> '+esc(task.praque));
       if(task.como)   detParts.push('<b>Como:</b> '+esc(task.como));
+      // Mostra rela\u00e7\u00f5es configuradas no fluxo
+      var nodeMap = window.NEON_FLUXO_NODE_BY_ID || {};
+      function labelOf(nid){ var n = nodeMap[nid]; return n ? n.label : nid; }
+      var relParts=[];
+      if(task.depends_on && task.depends_on.length){
+        relParts.push('<b>\u2190 Depende de:</b> '+task.depends_on.map(labelOf).map(esc).join(', '));
+      }
+      if(task.unlocks && task.unlocks.length){
+        relParts.push('<b>\u2192 Destrava:</b> '+task.unlocks.map(labelOf).map(esc).join(', '));
+      }
       wrap.innerHTML=
         '<div class="custom-task-item">'
           +'<div class="ct-hd">'
@@ -1674,15 +1726,21 @@
             +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
+            +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
           +'</div>'
           +(detParts.length?'<div class="ct-det">'+detParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
+          +(relParts.length?'<div class="ct-rel">'+relParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
         +'</div>';
       /* wire events */
       var titleEl=wrap.querySelector('.ct-title');
       titleEl.addEventListener('input',function(){
         var s=loadState(); var t=(s.custom_tasks||[]).find(function(x){return x.id===task.id;});
         if(t){t.title=titleEl.textContent.trim();saveState(s);}
+      });
+      var editBtn=wrap.querySelector('.ct-edit');
+      if(editBtn) editBtn.addEventListener('click',function(){
+        window.openModal(task.phase, task.id);
       });
       var delBtn=wrap.querySelector('.ct-del');
       delBtn.setAttribute('data-ctid',task.id);
@@ -1704,30 +1762,89 @@
 
   /* ---- modal ---- */
   var _phase=0;
-  window.openModal=function(ph){
-    _phase=ph;
-    document.getElementById('newTaskCode').value='';
-    document.getElementById('newTaskTitle').value='';
-    document.getElementById('newTaskOque').value='';
-    document.getElementById('newTaskPraque').value='';
-    document.getElementById('newTaskComo').value='';
+  var _editingId=null; // null = criar; setado = editar
+
+  function populateSelect(selEl, selected){
+    selEl.innerHTML='';
+    selected = selected || [];
+    var nodes = (window.NEON_FLUXO_NODES||[]);
+    var byPhase = {};
+    nodes.forEach(function(n){ (byPhase[n.phase] = byPhase[n.phase]||[]).push(n); });
+    Object.keys(byPhase).sort().forEach(function(ph){
+      var grp = document.createElement('optgroup');
+      grp.label = 'Fase '+ph;
+      byPhase[ph].forEach(function(n){
+        var o = document.createElement('option');
+        o.value = n.id; o.textContent = n.label;
+        if(selected.indexOf(n.id)!==-1) o.selected = true;
+        grp.appendChild(o);
+      });
+      selEl.appendChild(grp);
+    });
+  }
+  function getSelectedValues(selEl){
+    return [].slice.call(selEl.selectedOptions).map(function(o){return o.value;});
+  }
+
+  window.openModal=function(ph, taskId){
+    _phase = (ph!=null) ? ph : 0;
+    _editingId = taskId || null;
+    var existing = null;
+    if(_editingId){
+      var st = loadState();
+      existing = (st.custom_tasks||[]).find(function(t){return t.id===_editingId;}) || null;
+      if(existing) _phase = existing.phase;
+    }
+    document.getElementById('addTaskModalTitle').textContent = existing ? 'Editar etapa' : 'Adicionar etapa';
+    document.getElementById('addTaskModalConfirm').textContent = existing ? 'Salvar' : 'Adicionar';
+    document.getElementById('newTaskCode').value   = existing ? (existing.code||'') : '';
+    document.getElementById('newTaskTitle').value  = existing ? (existing.title||'') : '';
+    document.getElementById('newTaskOque').value   = existing ? (existing.oque||'') : '';
+    document.getElementById('newTaskPraque').value = existing ? (existing.praque||'') : '';
+    document.getElementById('newTaskComo').value   = existing ? (existing.como||'') : '';
+    populateSelect(document.getElementById('newTaskDepends'), existing ? (existing.depends_on||[]) : []);
+    populateSelect(document.getElementById('newTaskUnlocks'), existing ? (existing.unlocks||[]) : []);
     document.getElementById('addTaskModal').classList.add('show');
     setTimeout(function(){document.getElementById('newTaskTitle').focus();},80);
   };
-  window.closeAddTaskModal=function(){document.getElementById('addTaskModal').classList.remove('show');};
+  window.closeAddTaskModal=function(){
+    document.getElementById('addTaskModal').classList.remove('show');
+    _editingId = null;
+  };
   window.confirmAddTask=function(){
     var title=document.getElementById('newTaskTitle').value.trim();
     if(!title){alert('O t\u00edtulo \u00e9 obrigat\u00f3rio.');return;}
     var code=document.getElementById('newTaskCode').value.trim()||('C.'+Date.now().toString().slice(-3));
-    var task={
-      id:'ct_'+Date.now(),phase:_phase,code:code,title:title,
-      oque:document.getElementById('newTaskOque').value.trim(),
-      praque:document.getElementById('newTaskPraque').value.trim(),
-      como:document.getElementById('newTaskComo').value.trim()
-    };
+    var depends = getSelectedValues(document.getElementById('newTaskDepends'));
+    var unlocks = getSelectedValues(document.getElementById('newTaskUnlocks'));
     var st=loadState(); if(!st.custom_tasks) st.custom_tasks=[];
-    st.custom_tasks.push(task); saveState(st);
-    closeAddTaskModal(); renderCustomTasks();
+    if(_editingId){
+      // Modo editar: atualiza task existente preservando id/checks
+      var t = st.custom_tasks.find(function(x){return x.id===_editingId;});
+      if(t){
+        t.phase = _phase; t.code=code; t.title=title;
+        t.oque = document.getElementById('newTaskOque').value.trim();
+        t.praque = document.getElementById('newTaskPraque').value.trim();
+        t.como = document.getElementById('newTaskComo').value.trim();
+        t.depends_on = depends;
+        t.unlocks = unlocks;
+      }
+    } else {
+      // Modo criar
+      var task={
+        id:'ct_'+Date.now(),phase:_phase,code:code,title:title,
+        oque:document.getElementById('newTaskOque').value.trim(),
+        praque:document.getElementById('newTaskPraque').value.trim(),
+        como:document.getElementById('newTaskComo').value.trim(),
+        depends_on: depends,
+        unlocks: unlocks
+      };
+      st.custom_tasks.push(task);
+    }
+    saveState(st);
+    closeAddTaskModal();
+    renderCustomTasks();
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
   };
 
   /* ---- hook into internal mode ---- */
