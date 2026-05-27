@@ -28,7 +28,7 @@
 
   // ====== CONFIG ======
   // *** PREENCHER COM A URL DO WEB APP APÓS O DEPLOY ***
-  var ENDPOINT = '__APPS_SCRIPT_ENDPOINT__';
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbwJRfuiODF-hmh2gK1-nFUcEK-3Okv2EgRZkyLCr8An384hxB8QMMKH6emk1YW0ppAR/exec';
   var ALLOWED_KEYS = ['projeto_neon_lpncc', 'neon_cc_fat'];
   var SYNC_AT_KEY = '__neon_synced_at__';
   var RELOAD_SENTINEL = '__neon_reloaded_for__';
