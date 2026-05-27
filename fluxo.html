@@ -43,6 +43,11 @@ svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
 .node.done{border-color:#1a8a5a;box-shadow:0 4px 16px rgba(26,138,90,.18)}
 .node.done .hd{position:relative}
 .node.done .hd::after{content:'✓';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#1a8a5a;font-weight:700;font-size:15px}
+/* nodes "Adicionadas à Fase X" — começam escondidos, aparecem se há custom tasks */
+.node.extra{display:none;border-style:dashed;background:#fcfcfa}
+.node.extra.has-tasks{display:block}
+.node.extra .hd{background:#fff3d6;color:#7a5d12;font-size:12px}
+.node.extra .bd li{font-size:11px;color:#7a5d12}
 .tagm{position:absolute;font-family:'Lato';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);pointer-events:none}
 #hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,70,88,.9);color:#fff;font-size:11.5px;padding:7px 16px;border-radius:20px;z-index:20}
 </style></head>
@@ -104,20 +109,40 @@ var world=document.getElementById('world'), svg=document.getElementById('links')
 var NW=230;
 var pos={}, els={};
 
+// Adiciona nodes virtuais "Adicionadas à Fase X" (um por fase), à direita do canvas.
+// Eles ficam escondidos por padrão e só aparecem se houver custom tasks daquela fase.
+[0,1,2,3,4].forEach(function(p){
+  NODES.push({
+    id: 'extra.'+p,
+    ph: 'extra',
+    t: 'Adicionadas à Fase '+p,
+    sub: ['(nenhuma)'],
+    x: 1640,
+    y: 40 + p*200
+  });
+});
+
 NODES.forEach(function(n){
   pos[n.id]={x:n.x,y:n.y};
   var d=document.createElement('div');
   d.className='node p'+n.ph; d.dataset.id=n.id;
+  if(String(n.id).indexOf('extra.')===0) d.classList.add('extra');
   d.style.left=n.x+'px'; d.style.top=n.y+'px';
   var totalTasks = (NODE_TO_TASKS[n.id]||[]).length;
-  var badge = totalTasks>0 ? '<span class="badge" data-badge="'+n.id+'">0/'+totalTasks+'</span>' : '';
+  var badge = totalTasks>0 || String(n.id).indexOf('extra.')===0
+    ? '<span class="badge" data-badge="'+n.id+'">0/'+totalTasks+'</span>'
+    : '';
   d.innerHTML=badge+'<div class="hd">'+n.t+'</div><ul class="bd">'+n.sub.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
   world.appendChild(d); els[n.id]=d;
 });
 
-// ── aplica estado de checks (recebido do painel pai ou lido do localStorage) ──
-function applyChecks(checks){
+// ── aplica estado de checks + custom tasks (recebido do painel ou lido do localStorage) ──
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function applyChecks(checks, customTasks){
   checks = checks || {};
+  customTasks = customTasks || [];
+
+  // 1) Nodes nativos: progresso baseado em NODE_TO_TASKS
   Object.keys(NODE_TO_TASKS).forEach(function(nid){
     var el = els[nid]; if(!el) return;
     var tasks = NODE_TO_TASKS[nid];
@@ -128,12 +153,36 @@ function applyChecks(checks){
     var b = el.querySelector('.badge');
     if(b) b.textContent = done+'/'+total;
   });
+
+  // 2) Nodes virtuais "Adicionadas à Fase X": agrupa custom tasks por fase
+  [0,1,2,3,4].forEach(function(p){
+    var nid = 'extra.'+p;
+    var el = els[nid]; if(!el) return;
+    var ofPhase = customTasks.filter(function(t){return String(t.phase)===String(p);});
+    var total = ofPhase.length;
+    var done = ofPhase.filter(function(t){return !!checks[t.id];}).length;
+    el.classList.toggle('has-tasks', total>0);
+    el.classList.toggle('done', total>0 && done===total);
+    el.classList.toggle('progress', done>0 && done<total);
+    var b = el.querySelector('.badge');
+    if(b) b.textContent = done+'/'+total;
+    // re-render do bd com os títulos das custom tasks
+    var bd = el.querySelector('.bd');
+    if(bd){
+      bd.innerHTML = total
+        ? ofPhase.map(function(t){
+            var mark = checks[t.id] ? '✓ ' : '';
+            return '<li>'+mark+escHtml(t.code)+' '+escHtml(t.title)+'</li>';
+          }).join('')
+        : '<li style="color:#bcb09a">(nenhuma)</li>';
+    }
+  });
 }
 
 // Recebe state do painel pai (postMessage)
 window.addEventListener('message', function(ev){
   if(!ev.data || typeof ev.data!=='object') return;
-  if(ev.data.type==='neon-checks') applyChecks(ev.data.checks);
+  if(ev.data.type==='neon-checks') applyChecks(ev.data.checks, ev.data.custom_tasks);
 });
 
 // Fallback standalone: se aberto direto (não em iframe), tenta ler localStorage
@@ -141,7 +190,7 @@ window.addEventListener('message', function(ev){
 function pollLocal(){
   try{
     var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
-    if(st && st.checks) applyChecks(st.checks);
+    if(st) applyChecks(st.checks||{}, st.custom_tasks||[]);
   }catch(e){}
 }
 if(window.parent === window){

@@ -333,6 +333,14 @@
   .custom-task-item .ct-del{background:transparent;border:none;color:var(--gray);font-size:16px;cursor:pointer;padding:0 4px}
   .custom-task-item .ct-del:hover{color:#c0392b}
   .custom-task-item .ct-det{font-size:11.5px;color:var(--gray);line-height:1.55;margin-top:4px}
+  /* checkbox da custom task — mesmo visual do .box nativo */
+  .custom-task-item .ct-check{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0}
+  .custom-task-item .ct-check input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+  .custom-task-item .ct-box{width:17px;height:17px;border:1.5px solid var(--sage);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:#fff;transition:all .15s}
+  .custom-task-item .ct-box svg{width:11px;height:11px;opacity:0;transition:opacity .12s}
+  .custom-task-item .ct-check input:checked + .ct-box{background:var(--navy);border-color:var(--navy)}
+  .custom-task-item .ct-check input:checked + .ct-box svg{opacity:1}
+  .custom-task-item .ct-check:hover .ct-box{border-color:var(--navy)}
   /* reorder controls */
   .reorder{display:none;flex-direction:column;gap:1px;margin-left:auto;flex-shrink:0}
   body.internal-on label.task .reorder{display:inline-flex}
@@ -1177,8 +1185,23 @@
   function renderStamp(id){ var el=document.querySelector('.stamp[data-stamp="'+id+'"]'); if(!el) return; var s=state.stamps[id]; el.textContent = s? ('atualizado por '+s.by+' · '+s.at) : ''; }
   function touch(id){ state.stamps[id]={by:state.author, at:nowStr()}; renderStamp(id); save(); }
 
-  var boxes=[].slice.call(document.querySelectorAll('.task input[type=checkbox]'));
-  boxes.forEach(function(b){ if(state.checks[b.id]) b.checked=true; b.addEventListener('change',function(){ state.checks[b.id]=b.checked; save(); render(); }); });
+  // Selector inclusivo: pega tanto checkboxes nativos (.task) quanto
+  // custom tasks adicionadas via modal (renderizadas com data-phase).
+  var BOX_SEL = 'input[type=checkbox][data-phase]';
+  var boxes=[];
+  function bindBox(b){
+    if(b._neonBound) return;
+    b._neonBound = true;
+    if(state.checks[b.id]) b.checked=true;
+    b.addEventListener('change',function(){ state.checks[b.id]=b.checked; save(); render(); });
+  }
+  function rescanBoxes(){
+    boxes = [].slice.call(document.querySelectorAll(BOX_SEL));
+    boxes.forEach(bindBox);
+  }
+  rescanBoxes();
+  // Exposto pra ser chamado pelo script de custom tasks após adicionar/remover.
+  window.refreshNeonProgress = function(){ rescanBoxes(); render(); };
 
   [].slice.call(document.querySelectorAll('.status')).forEach(function(g){
     var id=g.getAttribute('data-task'); var cur=state.status[id];
@@ -1621,6 +1644,10 @@
       wrap.innerHTML=
         '<div class="custom-task-item">'
           +'<div class="ct-hd">'
+            +'<label class="ct-check" title="Marcar como conclu\u00edda">'
+              +'<input type="checkbox" data-phase="'+task.phase+'" id="'+esc(task.id)+'">'
+              +'<span class="ct-box"><svg viewBox="0 0 12 12"><path d="M1 6L4.5 9.5L11 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+            +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
@@ -1637,11 +1664,18 @@
       delBtn.setAttribute('data-ctid',task.id);
       delBtn.addEventListener('click',function(){
         if(!confirm('Excluir esta etapa?')) return;
-        var s=loadState(); s.custom_tasks=(s.custom_tasks||[]).filter(function(x){return x.id!==task.id;});
-        saveState(s); renderCustomTasks();
+        var s=loadState();
+        s.custom_tasks=(s.custom_tasks||[]).filter(function(x){return x.id!==task.id;});
+        // limpa o check pra n\u00e3o deixar lixo no state
+        if(s.checks) delete s.checks[task.id];
+        saveState(s);
+        renderCustomTasks();
+        if(window.refreshNeonProgress) window.refreshNeonProgress();
       });
       try{ if(btn.parentNode) btn.parentNode.insertBefore(wrap,btn); }catch(e){}
     });
+    // Notifica o script principal pra rebindar os novos checkboxes e recalcular o anel.
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
   }
 
   /* ---- modal ---- */
@@ -1850,17 +1884,21 @@
   var KEY='projeto_neon_lpncc';
   var fluxoChildReady = false;
 
-  function getChecks(){
+  function getPayload(){
     try{
       var st = JSON.parse(localStorage.getItem(KEY)||'{}');
-      return st.checks || {};
-    }catch(e){ return {}; }
+      return {
+        checks: st.checks || {},
+        custom_tasks: st.custom_tasks || []
+      };
+    }catch(e){ return {checks:{}, custom_tasks:[]}; }
   }
   function sendChecks(){
     var f = document.getElementById('fluxoFrame');
     if(!f || !f.contentWindow) return;
+    var p = getPayload();
     try{
-      f.contentWindow.postMessage({type:'neon-checks', checks:getChecks()}, '*');
+      f.contentWindow.postMessage({type:'neon-checks', checks:p.checks, custom_tasks:p.custom_tasks}, '*');
     }catch(e){}
   }
 
@@ -1892,7 +1930,7 @@
   setInterval(function(){
     if(!fluxoChildReady) return;
     var sig;
-    try{ sig = JSON.stringify(getChecks()); }catch(e){ sig = ''; }
+    try{ sig = JSON.stringify(getPayload()); }catch(e){ sig = ''; }
     if(sig !== _lastSig){
       _lastSig = sig;
       sendChecks();
