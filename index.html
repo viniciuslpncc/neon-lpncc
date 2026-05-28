@@ -1594,19 +1594,16 @@
   <!-- CALENDÁRIO DA JANELA -->
   <h2 style="font-family:'Lora',Georgia,serif;color:var(--navy);font-size:19px;margin-bottom:12px;font-weight:700">A linha do tempo do contrato.</h2>
   <div style="border:1px solid var(--line);border-radius:8px;padding:18px 22px;margin-bottom:30px;background:#fff">
-    <div style="display:grid;grid-template-columns:repeat(18,1fr);gap:3px;margin-bottom:8px">
-      <!-- jun a nov 2026: execução (6 meses) -->
-      <div style="grid-column:span 6;background:var(--navy);height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Execução · 6 meses · sem remuneração fixa</div>
-      <!-- dez 2026: gap (entrega) -->
-      <div style="grid-column:span 0"></div>
-      <!-- jan a dez 2027: janela de recebimento -->
-      <div style="grid-column:span 12;background:linear-gradient(90deg,#1a8a5a 0%,#1a8a5a 100%);height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Janela de Recebimento · 12 apurações mensais</div>
+    <!-- Barra única em 19 colunas (jun/26 a dez/27). Execução nas cols 1-6, gap na col 7 (dez/26 = Entrega), Janela nas cols 8-19. -->
+    <div style="display:grid;grid-template-columns:repeat(19,1fr);gap:3px;margin-bottom:8px">
+      <div style="grid-column:1 / span 6;background:var(--navy);height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Execução · 6 meses · sem remuneração fixa</div>
+      <div style="grid-column:8 / span 12;background:#1a8a5a;height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Janela de Recebimento · 12 apurações mensais</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(18,1fr);gap:3px;font-size:9px;color:var(--gray);text-align:center">
-      <div>jun/26</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div>
+    <div style="display:grid;grid-template-columns:repeat(19,1fr);gap:3px;font-size:9px;color:var(--gray);text-align:center;line-height:1.2">
+      <div>jun/26</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div><div style="color:#1a8a5a;font-weight:700">dez/26<br><span style="font-size:8px">▼ Entrega</span></div>
       <div>jan/27</div><div>fev</div><div>mar</div><div>abr</div><div>mai</div><div>jun</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div><div>dez/27</div>
     </div>
-    <p style="font-size:12px;color:var(--gray);line-height:1.55;margin-top:14px"><strong style="color:var(--navy)">Entrega = 30/nov/2026</strong> (fim da Fase 3, com documentação e passagem de operação). A primeira apuração tem por base o trimestre fechado anterior à apuração; primeiro pagamento em até 15 dias após o fechamento contábil do primeiro mês civil pós-Entrega.</p>
+    <p style="font-size:12px;color:var(--gray);line-height:1.55;margin-top:14px"><strong style="color:var(--navy)">Entrega = 30/nov/2026</strong> (fim da Fase 3, com documentação e passagem de operação). A <strong>Janela de Recebimento começa em jan/2027</strong> (primeiro mês civil pós-Entrega) e vai até dez/2027. A primeira apuração tem por base o trimestre fechado anterior; primeiro pagamento em até 15 dias após o fechamento contábil.</p>
   </div>
 
   <!-- DIREITOS E DEVERES LADO A LADO -->
