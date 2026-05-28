@@ -50,6 +50,13 @@ svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
 .node.custom-task-node{cursor:grab}
 .node.custom-task-node::before{content:'✎ duplo-clique p/ editar';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--gray);opacity:0;transition:opacity .15s;pointer-events:none;white-space:nowrap}
 .node.custom-task-node:hover::before{opacity:1}
+/* Edição inline dos nodes nativos (só quando internal-active) */
+body.internal-active .node .hd[contenteditable],
+body.internal-active .node .bd li[contenteditable]{cursor:text;outline:none;border-radius:3px;padding:1px 4px;transition:background .15s,box-shadow .15s}
+body.internal-active .node .hd[contenteditable]:hover,
+body.internal-active .node .bd li[contenteditable]:hover{background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px var(--line)}
+body.internal-active .node .hd[contenteditable]:focus,
+body.internal-active .node .bd li[contenteditable]:focus{background:#fff;box-shadow:inset 0 0 0 1.5px var(--navy)}
 .node.custom-task-node.done{border-color:#1a8a5a;background:#f2faf5}
 .node.custom-task-node.done .hd{background:#e3f3e9;color:#1a8a5a}
 .tagm{position:absolute;font-family:'Lato';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);pointer-events:none}
@@ -137,6 +144,15 @@ var pos={}, els={};
 
 // Cria nodes nativos (definidos em NODES). Custom tasks são adicionadas
 // dinamicamente em applyChecks como nodes próprios com prefixo "ct.".
+// Sobrescritas dos nodes nativos editadas pelo usuário (lidas do localStorage).
+var FLUXO_OVERRIDES = {};
+try{
+  var __st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+  FLUXO_OVERRIDES = (__st && __st.fluxo_overrides) || {};
+}catch(e){}
+function nodeT(n){ var o = FLUXO_OVERRIDES[n.id]; return (o && o.t!=null) ? o.t : n.t; }
+function nodeSub(n){ var o = FLUXO_OVERRIDES[n.id]; return (o && Array.isArray(o.sub)) ? o.sub : n.sub; }
+
 NODES.forEach(function(n){
   pos[n.id]={x:n.x,y:n.y};
   var d=document.createElement('div');
@@ -146,9 +162,88 @@ NODES.forEach(function(n){
   var badge = totalTasks>0
     ? '<span class="badge" data-badge="'+n.id+'">0/'+totalTasks+'</span>'
     : '';
-  d.innerHTML=badge+'<div class="hd">'+n.t+'</div><ul class="bd">'+n.sub.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
+  d.innerHTML=badge+'<div class="hd">'+nodeT(n)+'</div><ul class="bd">'+nodeSub(n).map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
   world.appendChild(d); els[n.id]=d;
 });
+
+// Habilita edição inline e salva overrides via postMessage ao pai.
+function enableInlineEdit(){
+  NODES.forEach(function(n){
+    var el = els[n.id]; if(!el || el._editBound) return; el._editBound = true;
+    var hd = el.querySelector('.hd');
+    var lis = el.querySelectorAll('.bd li');
+    function commit(){
+      var t = hd ? hd.textContent.trim() : n.t;
+      var sub = [].slice.call(lis).map(function(li){return li.textContent.trim();}).filter(Boolean);
+      // Só salva se for diferente do original
+      var changed = (t !== n.t) || (JSON.stringify(sub) !== JSON.stringify(n.sub));
+      if(window.parent !== window){
+        try{ window.parent.postMessage({type:'neon-fluxo-edit', id: n.id, t: t, sub: sub, changed: changed}, '*'); }catch(e){}
+      } else {
+        // Standalone: salva direto no localStorage
+        try{
+          var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+          if(!st.fluxo_overrides) st.fluxo_overrides = {};
+          if(changed) st.fluxo_overrides[n.id] = {t:t, sub:sub};
+          else delete st.fluxo_overrides[n.id];
+          localStorage.setItem('projeto_neon_lpncc', JSON.stringify(st));
+        }catch(e){}
+      }
+    }
+    if(hd){
+      hd.addEventListener('blur', commit);
+      hd.addEventListener('mousedown', function(ev){ if(document.body.classList.contains('internal-active')) ev.stopPropagation(); });
+      hd.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); hd.blur(); } });
+    }
+    [].slice.call(lis).forEach(function(li){
+      li.addEventListener('blur', commit);
+      li.addEventListener('mousedown', function(ev){ if(document.body.classList.contains('internal-active')) ev.stopPropagation(); });
+      li.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); li.blur(); } });
+    });
+  });
+}
+enableInlineEdit();
+
+// Aplica overrides recebidos via postMessage (sincronização entre usuários)
+function applyFluxoOverrides(overrides){
+  overrides = overrides || {};
+  FLUXO_OVERRIDES = overrides;
+  NODES.forEach(function(n){
+    var el = els[n.id]; if(!el) return;
+    var hd = el.querySelector('.hd'); if(hd && document.activeElement !== hd) hd.textContent = nodeT(n);
+    var lis = el.querySelectorAll('.bd li');
+    var newSub = nodeSub(n);
+    // Só substitui se quantidade de itens é a mesma E nenhum li está em foco
+    if(newSub.length === lis.length){
+      [].slice.call(lis).forEach(function(li, i){
+        if(document.activeElement !== li) li.textContent = newSub[i];
+      });
+    } else {
+      // se quantidade mudou (raro), reescreve o bd
+      var bd = el.querySelector('.bd');
+      if(bd && ![].slice.call(lis).some(function(li){return document.activeElement===li;})){
+        bd.innerHTML = newSub.map(function(s){return '<li contenteditable="plaintext-only">'+s.replace(/</g,'&lt;')+'</li>';}).join('');
+        el._editBound = false; enableInlineEdit();
+      }
+    }
+  });
+}
+
+// Habilita contenteditable nos nodes só quando body.internal-active
+function setEditableState(internal){
+  NODES.forEach(function(n){
+    var el = els[n.id]; if(!el) return;
+    var hd = el.querySelector('.hd');
+    if(hd){
+      if(internal) hd.setAttribute('contenteditable','plaintext-only');
+      else hd.removeAttribute('contenteditable');
+    }
+    [].slice.call(el.querySelectorAll('.bd li')).forEach(function(li){
+      if(internal) li.setAttribute('contenteditable','plaintext-only');
+      else li.removeAttribute('contenteditable');
+    });
+  });
+}
 
 // Posicionamento default das custom tasks: coluna à direita do canvas,
 // agrupadas por fase. Usuário pode arrastar pra reposicionar.
@@ -318,7 +413,9 @@ window.addEventListener('message', function(ev){
     if(ev.data.resp) applyRespToNodes(ev.data.resp, ev.data.resp_default, ev.data.custom_tasks);
     if(typeof ev.data.internal === 'boolean'){
       document.body.classList.toggle('internal-active', ev.data.internal);
+      setEditableState(ev.data.internal);
     }
+    if(ev.data.fluxo_overrides) applyFluxoOverrides(ev.data.fluxo_overrides);
     if(ev.data.resp_filter){
       window.setFluxoFilter(ev.data.resp_filter);
     }
@@ -333,6 +430,7 @@ function pollLocal(){
     if(st){
       applyChecks(st.checks||{}, st.custom_tasks||[]);
       applyRespToNodes(st.resp||{}, {}, st.custom_tasks||[]);
+      applyFluxoOverrides(st.fluxo_overrides||{});
     }
   }catch(e){}
 }

@@ -437,6 +437,8 @@
   body.internal-on .tasks > label.task{margin-top:6px}
   /* Esconde "O Norte" só na visão interna (polui durante operação) */
   body.internal-on .mission{display:none}
+  /* Esconde "O que não dá pra forçar · sequência obrigatória" na visão interna */
+  body.internal-on .locks{display:none}
   /* Seções colapsáveis (Linha do Tempo / Execução em Paralelo) */
   .section.collapsible .head{cursor:pointer;position:relative}
   .section.collapsible .head::after{content:'▼';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:12px;color:var(--gray);transition:transform .2s}
@@ -2187,7 +2189,7 @@ window.setRespFilter = function(rf){
 <!-- ABA FLUXO (mapa de dependências) -->
 <section id="sec-fluxo">
   <button class="close-fluxo" onclick="setView(document.body.classList.contains('internal-on')?'interna':'cliente')">✕ Voltar</button>
-  <iframe id="fluxoFrame" src="fluxo.html?v=8" title="Fluxo de dependências"></iframe>
+  <iframe id="fluxoFrame" src="fluxo.html?v=9" title="Fluxo de dependências"></iframe>
 </section>
 
 <script>
@@ -2212,9 +2214,10 @@ window.setRespFilter = function(rf){
         resp: st.resp || {},
         resp_default: window.RESP_DEFAULT || {},
         internal: document.body.classList.contains('internal-on'),
-        resp_filter: currentRespFilter()
+        resp_filter: currentRespFilter(),
+        fluxo_overrides: st.fluxo_overrides || {}
       };
-    }catch(e){ return {checks:{}, custom_tasks:[], resp:{}, resp_default:{}, internal:false, resp_filter:'all'}; }
+    }catch(e){ return {checks:{}, custom_tasks:[], resp:{}, resp_default:{}, internal:false, resp_filter:'all', fluxo_overrides:{}}; }
   }
   function sendChecks(){
     var f = document.getElementById('fluxoFrame');
@@ -2227,7 +2230,8 @@ window.setRespFilter = function(rf){
         resp: p.resp,
         resp_default: p.resp_default,
         internal: p.internal,
-        resp_filter: p.resp_filter
+        resp_filter: p.resp_filter,
+        fluxo_overrides: p.fluxo_overrides
       }, '*');
     }catch(e){}
   }
@@ -2248,6 +2252,18 @@ window.setRespFilter = function(rf){
           window.setView('interna');
           setTimeout(function(){ window.openModal(t.phase, t.id); }, 250);
         }
+      }catch(e){}
+    } else if(ev.data.type==='neon-fluxo-edit' && ev.data.id){
+      // Iframe editou um node nativo do fluxo → grava override em state.fluxo_overrides
+      try{
+        var s = JSON.parse(localStorage.getItem(KEY)||'{}');
+        if(!s.fluxo_overrides) s.fluxo_overrides = {};
+        if(ev.data.changed){
+          s.fluxo_overrides[ev.data.id] = {t: ev.data.t, sub: ev.data.sub};
+        } else {
+          delete s.fluxo_overrides[ev.data.id];
+        }
+        localStorage.setItem(KEY, JSON.stringify(s));
       }catch(e){}
     }
   });
