@@ -47,10 +47,28 @@ svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
 .node.custom-task-node{border-style:dashed;border-color:#b0942e;background:#fcfaf2}
 .node.custom-task-node .hd{background:#fff3d6;color:#7a5d12;font-size:12.5px}
 .node.custom-task-node .bd li{font-size:11px;color:#7a5d12}
+.node.custom-task-node{cursor:grab}
+.node.custom-task-node::before{content:'✎ duplo-clique p/ editar';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--gray);opacity:0;transition:opacity .15s;pointer-events:none;white-space:nowrap}
+.node.custom-task-node:hover::before{opacity:1}
 .node.custom-task-node.done{border-color:#1a8a5a;background:#f2faf5}
 .node.custom-task-node.done .hd{background:#e3f3e9;color:#1a8a5a}
 .tagm{position:absolute;font-family:'Lato';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);pointer-events:none}
 #hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,70,88,.9);color:#fff;font-size:11.5px;padding:7px 16px;border-radius:20px;z-index:20}
+/* Filtro de responsável (só aparece quando o pai está em modo interno) */
+.fluxo-resp-filter{display:none;align-items:center;border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;margin-left:14px}
+body.internal-active .fluxo-resp-filter{display:inline-flex}
+.fluxo-resp-filter .rlab{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:700;padding:0 11px}
+.fluxo-resp-filter .frf-btn{font-family:inherit;font-size:10.5px;font-weight:700;padding:6px 11px;background:#fff;color:var(--gray);border:none;border-left:1px solid var(--line);cursor:pointer}
+.fluxo-resp-filter .frf-btn:hover{color:var(--navy)}
+.fluxo-resp-filter .frf-btn.on[data-frf="all"]{background:var(--gray);color:#fff}
+.fluxo-resp-filter .frf-btn.on[data-frf="V"]{background:var(--navy);color:#fff}
+.fluxo-resp-filter .frf-btn.on[data-frf="G"]{background:#4C808B;color:#fff}
+.fluxo-resp-filter .frf-btn.on[data-frf="D"]{background:var(--sage);color:var(--navy)}
+/* Esmaece nodes que não batem com o filtro */
+body.filter-resp-V .node[data-resp-effective="G"]{opacity:.18}
+body.filter-resp-G .node[data-resp-effective="V"]{opacity:.18}
+body.filter-resp-D .node[data-resp-effective="V"],
+body.filter-resp-D .node[data-resp-effective="G"]{opacity:.18}
 </style></head>
 <body>
 <div id="top">
@@ -61,6 +79,13 @@ svg.links{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
     <span><span class="lz" style="border-color:#b0942e;border-top-style:dashed"></span>alimenta</span>
     <span><span class="lz" style="border-color:#b03030;border-top-style:dashed"></span>condicional</span>
     <span class="btnz"><button id="reset">Centralizar</button></span>
+    <div class="fluxo-resp-filter" title="Filtrar por responsável">
+      <span class="rlab">Resp.</span>
+      <button class="frf-btn on" data-frf="all" onclick="setFluxoFilter('all')">Todos</button>
+      <button class="frf-btn" data-frf="V" onclick="setFluxoFilter('V')">Vinicius</button>
+      <button class="frf-btn" data-frf="G" onclick="setFluxoFilter('G')">Gabriel</button>
+      <button class="frf-btn" data-frf="D" onclick="setFluxoFilter('D')">Os dois</button>
+    </div>
   </div>
 </div>
 <div id="stage">
@@ -172,6 +197,7 @@ function syncCustomNodes(customTasks, checks){
         d = document.createElement('div');
         d.className = 'node p'+t.phase+' custom-task-node';
         d.dataset.id = nid;
+        d.dataset.ctid = t.id; // pra postMessage de edit
         d.style.left = p.x+'px'; d.style.top = p.y+'px';
         world.appendChild(d);
         els[nid] = d;
@@ -180,6 +206,14 @@ function syncCustomNodes(customTasks, checks){
           ev.stopPropagation(); dragNode=d; moved=false;
           dragOff.x=ev.clientX/scale - pos[nid].x; dragOff.y=ev.clientY/scale - pos[nid].y;
           d.classList.add('dragging');
+        });
+        // Duplo clique abre modal de edição no painel pai
+        d.addEventListener('dblclick', function(ev){
+          ev.stopPropagation();
+          var ctid = d.dataset.ctid;
+          if(window.parent !== window){
+            try{ window.parent.postMessage({type:'neon-edit-ct', id: ctid}, '*'); }catch(e){}
+          }
         });
       }
       // Update content
@@ -243,10 +277,52 @@ function applyChecks(checks, customTasks){
   rebuildEdges(customTasks);
 }
 
+// Calcula o "responsável efetivo" de cada node (nativo agrega tasks do NODE_TO_TASKS).
+// Se todas as tasks têm o mesmo resp → vira esse resp. Se misturadas → 'mixed' (não filtra).
+function applyRespToNodes(respMap, respDefault, customTasks){
+  respMap = respMap || {}; respDefault = respDefault || {}; customTasks = customTasks || [];
+  // Native nodes
+  Object.keys(NODE_TO_TASKS).forEach(function(nid){
+    var el = els[nid]; if(!el) return;
+    var tasks = NODE_TO_TASKS[nid];
+    var set = {};
+    tasks.forEach(function(t){
+      var r = respMap[t] || respDefault[t] || 'D';
+      set[r] = true;
+    });
+    var keys = Object.keys(set);
+    var eff = (keys.length === 1) ? keys[0] : 'mixed';
+    el.setAttribute('data-resp-effective', eff);
+  });
+  // Custom task nodes
+  customTasks.forEach(function(t){
+    var el = els['ct.'+t.id]; if(!el) return;
+    var r = respMap[t.id] || 'D';
+    el.setAttribute('data-resp-effective', r);
+  });
+}
+
+window.setFluxoFilter = function(rf){
+  document.body.classList.remove('filter-resp-V','filter-resp-G','filter-resp-D');
+  if(rf && rf !== 'all') document.body.classList.add('filter-resp-'+rf);
+  [].slice.call(document.querySelectorAll('.frf-btn')).forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-frf')===rf);
+  });
+};
+
 // Recebe state do painel pai (postMessage)
 window.addEventListener('message', function(ev){
   if(!ev.data || typeof ev.data!=='object') return;
-  if(ev.data.type==='neon-checks') applyChecks(ev.data.checks, ev.data.custom_tasks);
+  if(ev.data.type==='neon-checks'){
+    applyChecks(ev.data.checks, ev.data.custom_tasks);
+    if(ev.data.resp) applyRespToNodes(ev.data.resp, ev.data.resp_default, ev.data.custom_tasks);
+    if(typeof ev.data.internal === 'boolean'){
+      document.body.classList.toggle('internal-active', ev.data.internal);
+    }
+    if(ev.data.resp_filter){
+      window.setFluxoFilter(ev.data.resp_filter);
+    }
+  }
 });
 
 // Fallback standalone: se aberto direto (não em iframe), tenta ler localStorage
@@ -254,7 +330,10 @@ window.addEventListener('message', function(ev){
 function pollLocal(){
   try{
     var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
-    if(st) applyChecks(st.checks||{}, st.custom_tasks||[]);
+    if(st){
+      applyChecks(st.checks||{}, st.custom_tasks||[]);
+      applyRespToNodes(st.resp||{}, {}, st.custom_tasks||[]);
+    }
   }catch(e){}
 }
 if(window.parent === window){

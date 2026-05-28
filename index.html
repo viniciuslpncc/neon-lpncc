@@ -62,6 +62,20 @@
   .ring .lab{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);margin-top:5px}
   .ring-sub{font-size:12.5px;color:var(--gray);margin-top:14px}
   .ring-sub b{color:var(--navy)}
+  /* progresso por responsável (só visão interna; tem classe .interno que vira display:block em .ring-by-resp.interno) */
+  .ring-by-resp{display:none;margin-top:14px;width:100%;max-width:300px}
+  body.internal-on .ring-by-resp{display:block}
+  .rbr-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--gray);margin-top:6px}
+  .rbr-tag{flex:0 0 60px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:9.5px}
+  .rbr-row[data-resp-prog="V"] .rbr-tag{color:var(--navy)}
+  .rbr-row[data-resp-prog="G"] .rbr-tag{color:var(--f2)}
+  .rbr-row[data-resp-prog="D"] .rbr-tag{color:var(--sage)}
+  .rbr-val{flex:0 0 42px;font-size:10.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .rbr-val b{font-weight:800}
+  .rbr-bar{flex:1;height:5px;background:var(--soft);border-radius:3px;overflow:hidden}
+  .rbr-bar i{display:block;height:100%;background:var(--navy);border-radius:3px;transition:width .5s ease}
+  .rbr-row[data-resp-prog="G"] .rbr-bar i{background:var(--f2)}
+  .rbr-row[data-resp-prog="D"] .rbr-bar i{background:var(--sage)}
 
   /* missão */
   .mission{background:var(--navy);color:#fff;border-radius:6px;padding:42px 46px;margin:34px 0 8px;position:relative;overflow:hidden}
@@ -303,7 +317,8 @@
   body.contrato-on > .wrap { display: none !important; }
   body.contrato-on > footer { display: none !important; }
   body.contrato-on #sec-contrato { display: block !important; }
-  body.contrato-on .topbar, body.contrato-on .viewtoggle { display: block; }
+  body.contrato-on .topbar { display: block; }
+  /* viewtoggle continua inline-flex no contrato pra botões ficarem em linha */
   /* contract tab */
   @media(max-width:640px){#sec-contrato [style*="grid-template-columns:1fr 1fr"]{display:block!important} #sec-contrato [style*="grid-template-columns:1fr 1fr"]>*{margin-bottom:14px}}
   /* add task modal */
@@ -420,6 +435,18 @@
   .ph-head{padding:22px 26px !important}
   /* espaçamento entre tarefas na visão interna */
   body.internal-on .tasks > label.task{margin-top:6px}
+  /* Esconde "O Norte" só na visão interna (polui durante operação) */
+  body.internal-on .mission{display:none}
+  /* Seções colapsáveis (Linha do Tempo / Execução em Paralelo) */
+  .section.collapsible .head{cursor:pointer;position:relative}
+  .section.collapsible .head::after{content:'▼';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:12px;color:var(--gray);transition:transform .2s}
+  .section.collapsible.collapsed .head::after{transform:translateY(-50%) rotate(-90deg)}
+  .section.collapsible.collapsed .head .sub,
+  .section.collapsible.collapsed .head h2{display:none}
+  .section.collapsible.collapsed .road,
+  .section.collapsible.collapsed .lanes,
+  .section.collapsible.collapsed .road-legend{display:none}
+  .section.collapsible.collapsed .head{padding-bottom:0;margin-bottom:0}
 </style>
 <style>
   /* Aba Fluxo (mapa de dependências) */
@@ -459,9 +486,6 @@
         <button class="rf-btn" data-rf="G" onclick="setRespFilter('G')">Gabriel</button>
         <button class="rf-btn" data-rf="D" onclick="setRespFilter('D')">Os dois</button>
       </div>
-      <button class="ib" onclick="exportState()">Salvar cópia</button>
-      <button class="ib" onclick="document.getElementById('importFile').click()">Carregar</button>
-      <input id="importFile" type="file" accept="application/json" style="display:none">
       <button class="ib" onclick="setView('cliente')">Sair</button>
     </div>
   </div>
@@ -490,6 +514,11 @@
         <div class="ctr"><div class="pct" id="ringPct">0</div><div class="lab">concluído</div></div>
       </div>
       <div class="ring-sub"><b id="doneCount">0</b> de <span id="totalCount">0</span> atividades</div>
+      <div class="ring-by-resp" id="ringByResp">
+        <div class="rbr-row" data-resp-prog="V"><span class="rbr-tag">Vinicius</span><span class="rbr-val"><b>0</b>/0</span><div class="rbr-bar"><i style="width:0%"></i></div></div>
+        <div class="rbr-row" data-resp-prog="G"><span class="rbr-tag">Gabriel</span><span class="rbr-val"><b>0</b>/0</span><div class="rbr-bar"><i style="width:0%"></i></div></div>
+        <div class="rbr-row" data-resp-prog="D"><span class="rbr-tag">Os dois</span><span class="rbr-val"><b>0</b>/0</span><div class="rbr-bar"><i style="width:0%"></i></div></div>
+      </div>
     </div>
   </div>
 
@@ -501,8 +530,8 @@
 </div>
 
 <!-- LINHA DO TEMPO -->
-<div class="wrap section">
-  <div class="head reveal">
+<div class="wrap section collapsible" data-collapse-id="timeline">
+  <div class="head reveal" onclick="toggleSection('timeline')">
     <span class="tag">Linha do Tempo</span>
     <h2>Onde a gente está, mês a mês.</h2>
     <p class="sub">Cada fase tem seu tempo e seu lugar. As barras que dividem o mesmo mês correm em paralelo. Os losangos marcam os momentos que importam.</p>
@@ -546,8 +575,8 @@
 </div>
 
 <!-- EXECUÇÃO EM PARALELO -->
-<div class="wrap section">
-  <div class="head reveal">
+<div class="wrap section collapsible" data-collapse-id="parallel">
+  <div class="head reveal" onclick="toggleSection('parallel')">
     <span class="tag">Execução em Paralelo</span>
     <h2>O que corre junto — e o que não dá.</h2>
     <p class="sub">Com a arquitetura desenhada, três frentes arrancam no mesmo dia, sem fila. Elas se encontram num ponto de convergência, e a partir dali o fluxo se monta.</p>
@@ -1218,7 +1247,8 @@
 (function(){
   var SENHA="lpncc";
   var KEY='projeto_neon_lpncc', RING_CIRC=464.96, unlocked=false;
-  var RESP_DEFAULT={'f0-1':'V','f0-2':'G','f0-3':'D','f0-4':'G','f0-5':'V','f0-6':'G','f0-7':'G','f0-8':'G','f1-1':'G','f1-2':'G','f1-3':'G','f1-4':'V','f1-5':'G','f1-6':'G','f1-7':'V','f1-8':'D','f1-9':'G','f1-10':'D','f2-1':'V','f2-2':'G','f2-3':'D','f2-4':'V','f2-5':'G','f2-6':'D','f2-7':'G','f2-8':'G','f2-9':'D','f2-10':'D','f3-1':'V','f3-2':'V','f3-3':'D','f3-4':'D','f3-5':'D','f4-1':'D','f4-2':'V','f4-3':'G','f4-4':'V','f4-5':'D'};
+  // RESP_DEFAULT exposto também em window pra o iframe Fluxo poder usar
+  var RESP_DEFAULT=window.RESP_DEFAULT={'f0-1':'V','f0-2':'G','f0-3':'D','f0-4':'G','f0-5':'V','f0-6':'G','f0-7':'G','f0-8':'G','f1-1':'G','f1-2':'G','f1-3':'G','f1-4':'V','f1-5':'G','f1-6':'G','f1-7':'V','f1-8':'D','f1-9':'G','f1-10':'D','f2-1':'V','f2-2':'G','f2-3':'D','f2-4':'V','f2-5':'G','f2-6':'D','f2-7':'G','f2-8':'G','f2-9':'D','f2-10':'D','f3-1':'V','f3-2':'V','f3-3':'D','f3-4':'D','f3-5':'D','f4-1':'D','f4-2':'V','f4-3':'G','f4-4':'V','f4-5':'D'};
 
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
@@ -1285,6 +1315,7 @@
         var p = findRespParent(g);
         if(p) p.setAttribute('data-resp-current', btn.getAttribute('data-r'));
         touch(id);
+        render(); // recalcula % por responsável
       });
     });
   }
@@ -1327,7 +1358,8 @@
     var nome='projeto-neon-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.json';
     var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
   };
-  document.getElementById('importFile').addEventListener('change',function(e){
+  var __impFile = document.getElementById('importFile');
+  if(__impFile) __impFile.addEventListener('change',function(e){
     var f=e.target.files[0]; if(!f) return; var r=new FileReader();
     r.onload=function(){ try{ var o=JSON.parse(r.result); var st=o.estado||o; if(confirm('Carregar este estado? As edições atuais neste navegador serão substituídas.')){ localStorage.setItem(KEY, JSON.stringify(st)); location.reload(); } }catch(err){ alert('Arquivo inválido.'); } };
     r.readAsText(f);
@@ -1350,6 +1382,23 @@
     document.getElementById('totalCount').textContent=ta;
     document.getElementById('ringFill').style.strokeDashoffset=(RING_CIRC*(1-ov)).toFixed(2);
     var lab=document.querySelector('.ring .lab'); if(lab) lab.textContent=(pr===100?'projeto concluído':'concluído');
+    renderByResp();
+  }
+  function renderByResp(){
+    var by = {V:{done:0,total:0}, G:{done:0,total:0}, D:{done:0,total:0}};
+    boxes.forEach(function(b){
+      if(state.deleted && state.deleted[b.id]) return; // ignora excluídas
+      var r = (state.resp && state.resp[b.id]) || RESP_DEFAULT[b.id] || 'D';
+      if(!by[r]) return;
+      by[r].total++;
+      if(b.checked) by[r].done++;
+    });
+    ['V','G','D'].forEach(function(r){
+      var row = document.querySelector('.rbr-row[data-resp-prog="'+r+'"]'); if(!row) return;
+      var pct = by[r].total ? Math.round(by[r].done/by[r].total*100) : 0;
+      row.querySelector('.rbr-val').innerHTML = '<b>'+by[r].done+'</b>/'+by[r].total;
+      row.querySelector('.rbr-bar i').style.width = pct + '%';
+    });
   }
 
   window.setView=function(v){
@@ -1357,8 +1406,8 @@
     try{applyTitleOverrides();}catch(e){}
     document.body.classList.toggle('internal-on', v==='interna');
     document.body.classList.toggle('contrato-on', v==='contrato');
-    ['btnCli','btnInt','btnCon'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
-    var actId={cliente:'btnCli',interna:'btnInt',contrato:'btnCon'}[v];
+    ['btnCli','btnInt','btnCon','btnFlx'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
+    var actId={cliente:'btnCli',interna:'btnInt',contrato:'btnCon',fluxo:'btnFlx'}[v];
     if(actId){ var el2=document.getElementById(actId); if(el2) el2.classList.add('active'); }
     if(v==='interna') setTimeout(applyInternalControls,50);
   };
@@ -1418,11 +1467,13 @@
   function applyDeletedState(){
     boxes.forEach(function(cb){
       var id=cb.id; var del=!!state.deleted[id];
-      var lb=document.querySelector('label.task[for="'+id+'"]');
-      var ti=document.querySelector('.status[data-task="'+id+'"]');
-      var tiDiv=ti?ti.closest?ti.closest('.taskint'):null:null;
-      if(!tiDiv&&ti){ var p=ti; while(p&&!p.classList.contains('taskint')) p=p.parentNode; tiDiv=p; }
-      [cb,lb,tiDiv].forEach(function(el){ if(el){ el.classList.toggle('task-hidden-del',del); } });
+      // checkbox nativo: <input> está fora do label sibling; custom: <input> está dentro de .ct-check dentro de .custom-task-section
+      var lb = cb.closest ? cb.closest('label.task') : null;
+      var ti = document.querySelector('.status[data-task="'+id+'"]');
+      var tiDiv = ti && ti.closest ? ti.closest('.taskint') : null;
+      [cb, lb, tiDiv].forEach(function(el){
+        if(el && el.classList) el.classList.toggle('task-hidden-del', del);
+      });
     });
     render();
   }
@@ -2092,6 +2143,35 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
 </script>
 
 <script>
+/* ── Toggle de seções colapsáveis (Linha do Tempo / Execução em Paralelo) ── */
+window.toggleSection = function(id, force){
+  var sec = document.querySelector('.section.collapsible[data-collapse-id="'+id+'"]');
+  if(!sec) return;
+  var willCollapse = (force!=null) ? !!force : !sec.classList.contains('collapsed');
+  sec.classList.toggle('collapsed', willCollapse);
+  // Persiste no state
+  try{
+    var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+    if(!st.ui) st.ui = {};
+    if(!st.ui.collapsed) st.ui.collapsed = {};
+    st.ui.collapsed[id] = willCollapse;
+    localStorage.setItem('projeto_neon_lpncc', JSON.stringify(st));
+  }catch(e){}
+};
+(function applyCollapsedOnBoot(){
+  function go(){
+    try{
+      var st = JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+      var c = (st.ui && st.ui.collapsed) || {};
+      ['timeline','parallel'].forEach(function(id){
+        if(c[id]) window.toggleSection(id, true);
+      });
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go);
+  else setTimeout(go, 50);
+})();
+
 /* ── Filtro por responsável: esmaece etapas que não batem ── */
 window.setRespFilter = function(rf){
   document.body.classList.remove('filter-resp-V','filter-resp-G','filter-resp-D');
@@ -2099,13 +2179,15 @@ window.setRespFilter = function(rf){
   [].slice.call(document.querySelectorAll('.resp-filter .rf-btn')).forEach(function(b){
     b.classList.toggle('on', b.getAttribute('data-rf')===rf);
   });
+  // Propaga pro iframe do Fluxo (se já carregou)
+  if(window.__neonFluxoSendChecks) window.__neonFluxoSendChecks();
 };
 </script>
 
 <!-- ABA FLUXO (mapa de dependências) -->
 <section id="sec-fluxo">
   <button class="close-fluxo" onclick="setView(document.body.classList.contains('internal-on')?'interna':'cliente')">✕ Voltar</button>
-  <iframe id="fluxoFrame" src="fluxo.html" title="Fluxo de dependências"></iframe>
+  <iframe id="fluxoFrame" src="fluxo.html?v=8" title="Fluxo de dependências"></iframe>
 </section>
 
 <script>
@@ -2115,29 +2197,58 @@ window.setRespFilter = function(rf){
   var KEY='projeto_neon_lpncc';
   var fluxoChildReady = false;
 
+  function currentRespFilter(){
+    if(document.body.classList.contains('filter-resp-V')) return 'V';
+    if(document.body.classList.contains('filter-resp-G')) return 'G';
+    if(document.body.classList.contains('filter-resp-D')) return 'D';
+    return 'all';
+  }
   function getPayload(){
     try{
       var st = JSON.parse(localStorage.getItem(KEY)||'{}');
       return {
         checks: st.checks || {},
-        custom_tasks: st.custom_tasks || []
+        custom_tasks: st.custom_tasks || [],
+        resp: st.resp || {},
+        resp_default: window.RESP_DEFAULT || {},
+        internal: document.body.classList.contains('internal-on'),
+        resp_filter: currentRespFilter()
       };
-    }catch(e){ return {checks:{}, custom_tasks:[]}; }
+    }catch(e){ return {checks:{}, custom_tasks:[], resp:{}, resp_default:{}, internal:false, resp_filter:'all'}; }
   }
   function sendChecks(){
     var f = document.getElementById('fluxoFrame');
     if(!f || !f.contentWindow) return;
     var p = getPayload();
     try{
-      f.contentWindow.postMessage({type:'neon-checks', checks:p.checks, custom_tasks:p.custom_tasks}, '*');
+      f.contentWindow.postMessage({type:'neon-checks',
+        checks: p.checks,
+        custom_tasks: p.custom_tasks,
+        resp: p.resp,
+        resp_default: p.resp_default,
+        internal: p.internal,
+        resp_filter: p.resp_filter
+      }, '*');
     }catch(e){}
   }
+  window.__neonFluxoSendChecks = sendChecks; // exposto pra setRespFilter chamar
 
   // Iframe avisa quando carregou (handshake): aí enviamos o state.
   window.addEventListener('message', function(ev){
-    if(ev.data && ev.data.type==='neon-fluxo-ready'){
+    if(!ev.data || typeof ev.data!=='object') return;
+    if(ev.data.type==='neon-fluxo-ready'){
       fluxoChildReady = true;
       sendChecks();
+    } else if(ev.data.type==='neon-edit-ct' && ev.data.id){
+      // Iframe pediu pra editar uma custom task → volta pra visão interna e abre modal
+      try{
+        var st = JSON.parse(localStorage.getItem(KEY)||'{}');
+        var t = (st.custom_tasks||[]).find(function(x){return x.id===ev.data.id;});
+        if(t){
+          window.setView('interna');
+          setTimeout(function(){ window.openModal(t.phase, t.id); }, 250);
+        }
+      }catch(e){}
     }
   });
 
@@ -2147,7 +2258,13 @@ window.setRespFilter = function(rf){
     if(v==='fluxo'){
       document.body.classList.remove('contrato-on');
       document.body.classList.add('fluxo-on');
-      if(fluxoChildReady) sendChecks();
+      // Marca o botão Fluxo como ativo (espelha o que setView original faz)
+      ['btnCli','btnInt','btnCon','btnFlx'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
+      var btn = document.getElementById('btnFlx'); if(btn) btn.classList.add('active');
+      // Sempre tenta enviar (mesmo se handshake ainda não rolou — iframe pode receber tarde)
+      sendChecks();
+      setTimeout(sendChecks, 250);
+      setTimeout(sendChecks, 800);
       return;
     }
     document.body.classList.remove('fluxo-on');
