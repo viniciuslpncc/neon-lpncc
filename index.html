@@ -480,6 +480,54 @@
   .section.collapsible.collapsed .head{padding-bottom:0;margin-bottom:0}
 </style>
 <style>
+  /* Quadro de Notas estilo Trello */
+  #sec-notes{padding:40px 0 30px}
+  .notes-toolbar{display:flex;align-items:center;gap:18px;margin-bottom:18px;flex-wrap:wrap}
+  .notes-add{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border:none;font-family:var(--body);font-size:12.5px;font-weight:700;padding:9px 18px;border-radius:7px;cursor:pointer;letter-spacing:.02em;transition:all .15s}
+  .notes-add:hover{background:#003040;transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,70,88,.2)}
+  .notes-filter{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);flex-wrap:wrap}
+  .notes-filter .nf-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);font-weight:700;margin-right:4px}
+  .notes-filter .nf-btn{background:#fff;border:1px solid var(--line);border-radius:5px;padding:5px 10px;cursor:pointer;color:var(--gray);font-family:var(--body);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
+  .notes-filter .nf-btn:hover{border-color:var(--navy)}
+  .notes-filter .nf-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .notes-filter .nf-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .notes-filter .nf-hide.on .nf-check::before{content:'✓ '}
+  .notes-empty{font-size:13px;color:var(--gray);font-style:italic;padding:32px;background:var(--soft);border:1px dashed var(--line);border-radius:10px;text-align:center}
+  .notes-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .note-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,70,88,.04);position:relative;cursor:grab;border-left:5px solid var(--sage);transition:box-shadow .15s,transform .15s}
+  .note-card.dragging{opacity:.5;cursor:grabbing}
+  .note-card.drag-over{box-shadow:0 0 0 2px var(--navy);transform:scale(1.01)}
+  .note-card:hover{box-shadow:0 4px 10px rgba(0,70,88,.1)}
+  .note-card.label-blue{border-left-color:#004658}
+  .note-card.label-green{border-left-color:#1a8a5a}
+  .note-card.label-yellow{border-left-color:#b58210}
+  .note-card.label-red{border-left-color:#9b2828}
+  .note-card.label-gray{border-left-color:#87868a}
+  .note-card.is-done{opacity:.55;background:var(--soft)}
+  .note-card.is-done .note-title{text-decoration:line-through}
+  .note-card .note-title{font-family:'Lora',Georgia,serif;font-size:14.5px;font-weight:700;color:var(--navy);outline:none;padding:2px 4px;margin:-2px -4px;border-radius:4px;cursor:text;line-height:1.3;display:block;min-height:22px}
+  .note-card .note-title:empty::before{content:'Título…';color:var(--gray);opacity:.5}
+  .note-card .note-title:hover{background:var(--soft)}
+  .note-card .note-title:focus{background:#fff;box-shadow:inset 0 0 0 1.5px var(--navy)}
+  .note-card .note-body{font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:8px;outline:none;padding:2px 4px;margin-left:-4px;margin-right:-4px;border-radius:4px;cursor:text;min-height:18px;white-space:pre-wrap}
+  .note-card .note-body:empty::before{content:'Anotações…';color:var(--gray);opacity:.5}
+  .note-card .note-body:hover{background:var(--soft)}
+  .note-card .note-body:focus{background:#fff;box-shadow:inset 0 0 0 1.5px var(--navy)}
+  .note-card .note-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:10px;color:var(--gray);font-variant-numeric:tabular-nums}
+  .note-card .note-labels{display:flex;gap:4px;align-items:center}
+  .note-card .note-labels button{width:14px;height:14px;border-radius:50%;border:1px solid transparent;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
+  .note-card .note-labels button:hover{transform:scale(1.2)}
+  .note-card .note-labels button.on{border-color:var(--navy);transform:scale(1.15)}
+  .note-card .note-labels button[data-color="blue"]{background:#004658}
+  .note-card .note-labels button[data-color="green"]{background:#1a8a5a}
+  .note-card .note-labels button[data-color="yellow"]{background:#b58210}
+  .note-card .note-labels button[data-color="red"]{background:#9b2828}
+  .note-card .note-labels button[data-color="gray"]{background:#87868a}
+  .note-card .note-actions{display:flex;gap:4px;align-items:center}
+  .note-card .note-actions button{background:transparent;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;line-height:1}
+  .note-card .note-actions button:hover{background:var(--soft);color:var(--navy)}
+  .note-card .note-actions .note-del:hover{color:#9b2828}
+
   /* Aba Agenda (timeline + calendário) */
   #sec-agenda{display:none;position:fixed;inset:0;background:#f4f7f7;z-index:40;overflow-y:auto;padding-top:24px}
   body.agenda-on #sec-agenda{display:block}
@@ -1306,6 +1354,30 @@
     <div class="cbox"><div class="ct">Acordo</div><h4>Confidencialidade</h4><p>Proteção da metodologia e da receita técnica da LPNCC.</p><span class="ad">A definir</span></div>
   </div>
   <div class="phaseint" style="display:block;margin:18px 0 0"><label>Anotações do contrato — Vinicius + Gabriel</label><textarea data-note="contrato" placeholder="Termos em discussão, valores, condições…"></textarea></div>
+</div>
+
+<!-- NOTAS (estilo Trello — anotações livres do cliente + time interno) -->
+<div class="wrap section" id="sec-notes">
+  <div class="head reveal">
+    <span class="tag">Quadro de Notas</span>
+    <h2>O que precisa ficar registrado, em um clique.</h2>
+    <p class="sub">Espaço pra lembretes, pendências, decisões e ideias. Use etiquetas pra organizar. Tudo sincroniza automaticamente.</p>
+  </div>
+  <div class="notes-toolbar reveal">
+    <button class="notes-add" onclick="addNote()"><span style="font-size:16px;line-height:1">+</span> Nova nota</button>
+    <div class="notes-filter">
+      <span class="nf-lbl">Filtrar</span>
+      <button class="nf-btn on" data-nf="all" onclick="setNoteFilter('all')">Todas</button>
+      <button class="nf-btn" data-nf="blue" onclick="setNoteFilter('blue')"><span class="nf-dot" style="background:#004658"></span></button>
+      <button class="nf-btn" data-nf="green" onclick="setNoteFilter('green')"><span class="nf-dot" style="background:#1a8a5a"></span></button>
+      <button class="nf-btn" data-nf="yellow" onclick="setNoteFilter('yellow')"><span class="nf-dot" style="background:#b58210"></span></button>
+      <button class="nf-btn" data-nf="red" onclick="setNoteFilter('red')"><span class="nf-dot" style="background:#9b2828"></span></button>
+      <button class="nf-btn" data-nf="gray" onclick="setNoteFilter('gray')"><span class="nf-dot" style="background:#87868a"></span></button>
+      <button class="nf-btn nf-hide" data-nf="hide-done" onclick="toggleHideDone()"><span class="nf-check"></span>esconder concluídas</button>
+    </div>
+  </div>
+  <div id="notes-empty" class="notes-empty" style="display:none">Nenhuma nota ainda. Clique em <strong>+ Nova nota</strong> pra começar.</div>
+  <div id="notes-board" class="notes-board"></div>
 </div>
 
 <!-- RODAPÉ -->
@@ -2602,6 +2674,177 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     if(document.body.classList.contains('internal-on')) setTimeout(function(){injectControls();updateDisabled();},120);
   });
   if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<script>
+/* ── QUADRO DE NOTAS estilo Trello ───────────────────────────────── */
+(function(){
+  var KEY='projeto_neon_lpncc';
+  var COLORS=['blue','green','yellow','red','gray'];
+  var noteFilter='all';
+  var hideDone=false;
+
+  function _state(){ try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};} }
+  function _save(st){ try{localStorage.setItem(KEY, JSON.stringify(st));}catch(e){} }
+  function _notes(){ var s=_state(); return s.client_notes || []; }
+  function _setNotes(arr){ var s=_state(); s.client_notes=arr; _save(s); }
+  function _esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function _fmtDate(ts){
+    if(!ts) return '';
+    var d=new Date(ts);
+    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  }
+
+  function render(){
+    var board = document.getElementById('notes-board');
+    var empty = document.getElementById('notes-empty');
+    if(!board) return;
+    var notes = _notes();
+    var visible = notes.filter(function(n){
+      if(hideDone && n.done) return false;
+      if(noteFilter !== 'all' && n.label !== noteFilter) return false;
+      return true;
+    });
+    if(!visible.length){
+      board.innerHTML = '';
+      empty.style.display = notes.length ? 'none' : 'block';
+      if(notes.length && noteFilter!=='all') empty.style.display='block', empty.textContent='Nenhuma nota com esse filtro.';
+      return;
+    }
+    empty.style.display='none';
+    board.innerHTML = visible.map(function(n){
+      var lbl = n.label || 'gray';
+      return '<div class="note-card label-'+lbl+(n.done?' is-done':'')+'" data-id="'+_esc(n.id)+'" draggable="true">'
+        +'<span class="note-title" contenteditable="plaintext-only" data-field="title">'+_esc(n.title||'')+'</span>'
+        +'<div class="note-body" contenteditable="plaintext-only" data-field="body">'+_esc(n.body||'')+'</div>'
+        +'<div class="note-meta">'
+          +'<div class="note-labels">'
+            +COLORS.map(function(c){return '<button data-color="'+c+'" title="'+c+'"'+(lbl===c?' class="on"':'')+'></button>';}).join('')
+          +'</div>'
+          +'<div class="note-actions">'
+            +'<button class="note-done" title="'+(n.done?'Reabrir':'Marcar como concluída')+'">'+(n.done?'↺':'✓')+'</button>'
+            +'<button class="note-del" title="Excluir">×</button>'
+          +'</div>'
+        +'</div>'
+        +(n.created_at?'<div style="font-size:9.5px;color:var(--gray);margin-top:6px;font-variant-numeric:tabular-nums">criada '+_fmtDate(n.created_at)+'</div>':'')
+      +'</div>';
+    }).join('');
+    bindCards();
+  }
+
+  function bindCards(){
+    [].slice.call(document.querySelectorAll('.note-card')).forEach(function(card){
+      if(card._bound) return; card._bound = true;
+      var id = card.getAttribute('data-id');
+      // Edição inline (título + corpo)
+      [].slice.call(card.querySelectorAll('[contenteditable][data-field]')).forEach(function(el){
+        el.addEventListener('blur', function(){
+          var notes = _notes();
+          var n = notes.find(function(x){return x.id===id;});
+          if(!n) return;
+          n[el.getAttribute('data-field')] = el.textContent.trim();
+          _setNotes(notes);
+        });
+        el.addEventListener('keydown', function(e){
+          // Enter no título sai do foco; no body permite quebra com Shift+Enter
+          if(e.key==='Enter' && el.getAttribute('data-field')==='title'){ e.preventDefault(); el.blur(); }
+          if(e.key==='Enter' && el.getAttribute('data-field')==='body' && !e.shiftKey){
+            // permite Enter normal no body
+          }
+        });
+      });
+      // Etiquetas (color)
+      [].slice.call(card.querySelectorAll('.note-labels button')).forEach(function(b){
+        b.addEventListener('click', function(){
+          var notes = _notes();
+          var n = notes.find(function(x){return x.id===id;});
+          if(!n) return;
+          n.label = b.getAttribute('data-color');
+          _setNotes(notes); render();
+        });
+      });
+      // Done
+      card.querySelector('.note-done').addEventListener('click', function(){
+        var notes = _notes();
+        var n = notes.find(function(x){return x.id===id;});
+        if(!n) return;
+        n.done = !n.done;
+        _setNotes(notes); render();
+      });
+      // Delete
+      card.querySelector('.note-del').addEventListener('click', function(){
+        if(!confirm('Excluir esta nota?')) return;
+        _setNotes(_notes().filter(function(x){return x.id!==id;}));
+        render();
+      });
+      // Drag and drop pra reordenar
+      card.addEventListener('dragstart', function(e){
+        card.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', function(){ card.classList.remove('dragging'); });
+      card.addEventListener('dragover', function(e){ e.preventDefault(); card.classList.add('drag-over'); });
+      card.addEventListener('dragleave', function(){ card.classList.remove('drag-over'); });
+      card.addEventListener('drop', function(e){
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        var srcId = e.dataTransfer.getData('text/plain');
+        if(srcId === id) return;
+        var notes = _notes();
+        var srcIdx = notes.findIndex(function(x){return x.id===srcId;});
+        var tgtIdx = notes.findIndex(function(x){return x.id===id;});
+        if(srcIdx<0 || tgtIdx<0) return;
+        var moved = notes.splice(srcIdx,1)[0];
+        notes.splice(tgtIdx, 0, moved);
+        _setNotes(notes); render();
+      });
+    });
+  }
+
+  window.addNote = function(){
+    var notes = _notes();
+    notes.unshift({
+      id: 'n_'+Date.now(),
+      title: '',
+      body: '',
+      label: 'gray',
+      done: false,
+      created_at: new Date().toISOString()
+    });
+    _setNotes(notes);
+    render();
+    // Foca no título recém-criado
+    setTimeout(function(){
+      var first = document.querySelector('.note-card .note-title');
+      if(first) first.focus();
+    }, 50);
+  };
+
+  window.setNoteFilter = function(f){
+    noteFilter = f;
+    [].slice.call(document.querySelectorAll('.notes-filter .nf-btn[data-nf]')).forEach(function(b){
+      var t = b.getAttribute('data-nf');
+      if(t==='hide-done') return;
+      b.classList.toggle('on', t===f);
+    });
+    render();
+  };
+  window.toggleHideDone = function(){
+    hideDone = !hideDone;
+    var b = document.querySelector('.notes-filter .nf-btn[data-nf="hide-done"]');
+    if(b) b.classList.toggle('on', hideDone);
+    render();
+  };
+  window.renderClientNotes = render;
+
+  // Render inicial
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(render, 100); });
+  else setTimeout(render, 100);
+
+  // Re-render quando o state remoto chega (sync-layer reload da página)
+  // — já tratado pelo reload completo
 })();
 </script>
 
