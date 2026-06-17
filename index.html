@@ -12,6 +12,8 @@
     --navy:#004658; --sage:#BCCCCE; --gray:#87868A; --white:#FFFFFF;
     --ink:#0e2f38; --line:#E4EAEA; --line-soft:#F0F3F3; --chip:#EAF0F0; --soft:#F7FAFA;
     --f0:#004658; --f1:#235F6B; --f2:#4C808B; --f3:#7CA0A6; --f4:#BCCCCE;
+    /* Cores fixas por responsável (distintas entre si) */
+    --resp-v:#004658; --resp-g:#c66a30; --resp-d:#7CA0A6;
     --display:'Lora',Georgia,'Times New Roman',serif;
     --body:'Lato',-apple-system,BlinkMacSystemFont,sans-serif;
   }
@@ -68,13 +70,13 @@
   .rbr-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--gray);margin-top:6px}
   .rbr-tag{flex:0 0 60px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:9.5px}
   .rbr-row[data-resp-prog="V"] .rbr-tag{color:var(--navy)}
-  .rbr-row[data-resp-prog="G"] .rbr-tag{color:var(--f2)}
+  .rbr-row[data-resp-prog="G"] .rbr-tag{color:var(--resp-g)}
   .rbr-row[data-resp-prog="D"] .rbr-tag{color:var(--sage)}
   .rbr-val{flex:0 0 42px;font-size:10.5px;color:var(--ink);font-variant-numeric:tabular-nums}
   .rbr-val b{font-weight:800}
   .rbr-bar{flex:1;height:5px;background:var(--soft);border-radius:3px;overflow:hidden}
   .rbr-bar i{display:block;height:100%;background:var(--navy);border-radius:3px;transition:width .5s ease}
-  .rbr-row[data-resp-prog="G"] .rbr-bar i{background:var(--f2)}
+  .rbr-row[data-resp-prog="G"] .rbr-bar i{background:var(--resp-g)}
   .rbr-row[data-resp-prog="D"] .rbr-bar i{background:var(--sage)}
 
   /* missão */
@@ -304,7 +306,7 @@
   .resp .rlab{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:700;padding:0 11px}
   .resp button{font-family:var(--body);font-size:10.5px;font-weight:700;padding:6px 12px;background:#fff;color:var(--gray);border:none;border-left:1px solid var(--line);cursor:pointer}
   .resp button.on[data-r="V"]{background:var(--navy);color:#fff}
-  .resp button.on[data-r="G"]{background:var(--f2);color:#fff}
+  .resp button.on[data-r="G"]{background:var(--resp-g);color:#fff}
   .resp button.on[data-r="D"]{background:var(--sage);color:var(--navy)}
   .taskfield{width:100%;min-height:42px;margin-top:11px;border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-family:var(--body);font-size:12.5px;color:var(--ink);resize:vertical;background:#fff}
   .taskfield:focus{outline:none;border-color:var(--navy)}
@@ -380,12 +382,13 @@
   .custom-task-item .ct-edit{background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 4px;display:none}
   .custom-task-item .ct-edit:hover{color:var(--navy)}
   body.internal-on .custom-task-item .ct-edit{display:inline-block}
-  /* Botões de reorder ▲▼ na custom task */
-  .custom-task-item .ct-reorder{display:none;align-items:center;gap:2px}
-  body.internal-on .custom-task-item .ct-reorder{display:inline-flex}
-  .custom-task-item .ct-reorder button{background:transparent;border:1px solid var(--line);color:var(--gray);font-size:9px;cursor:pointer;padding:2px 5px;border-radius:3px;line-height:1;transition:all .12s}
-  .custom-task-item .ct-reorder button:hover{background:var(--soft);color:var(--navy);border-color:var(--sage)}
-  .custom-task-item .ct-reorder button:disabled{opacity:.35;cursor:not-allowed}
+  /* Handle de drag-drop pra reordenar custom tasks (interna) */
+  .custom-task-item .ct-drag-handle{display:none;align-items:center;justify-content:center;width:24px;height:24px;color:var(--gray);cursor:grab;border-radius:4px;transition:all .12s;flex-shrink:0;user-select:none}
+  body.internal-on .custom-task-item .ct-drag-handle{display:inline-flex}
+  .custom-task-item .ct-drag-handle:hover{background:var(--soft);color:var(--navy)}
+  .custom-task-item .ct-drag-handle:active{cursor:grabbing}
+  .custom-task-section.ct-dragging{opacity:.4}
+  .custom-task-section.ct-drag-over{box-shadow:0 -3px 0 var(--navy);transition:box-shadow .12s}
   /* footer com status / responsável / stamp na custom task — só aparece na visão interna */
   .custom-task-item .ct-tfoot{display:none}
   body.internal-on .custom-task-item .ct-tfoot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
@@ -397,7 +400,7 @@
   .resp-filter .rf-btn:hover{color:var(--navy)}
   .resp-filter .rf-btn.on[data-rf="all"]{background:var(--gray);color:#fff}
   .resp-filter .rf-btn.on[data-rf="V"]{background:var(--navy);color:#fff}
-  .resp-filter .rf-btn.on[data-rf="G"]{background:var(--f2);color:#fff}
+  .resp-filter .rf-btn.on[data-rf="G"]{background:var(--resp-g);color:#fff}
   .resp-filter .rf-btn.on[data-rf="D"]{background:var(--sage);color:var(--navy)}
 
   /* Filtros aplicados — esmaece etapas que NÃO batem com o responsável selecionado */
@@ -552,12 +555,13 @@
   .agenda-timeline .tl-today::after{content:'hoje';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--navy);background:#fff;padding:2px 6px;border:1px solid var(--navy);border-radius:9px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
   .agenda-timeline .tl-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer;z-index:2;transition:transform .15s}
   .agenda-timeline .tl-marker:hover{transform:translate(-50%,-50%) scale(1.4)}
-  .agenda-timeline .tl-marker.resp-V{background:#004658}
-  .agenda-timeline .tl-marker.resp-G{background:#4C808B}
-  .agenda-timeline .tl-marker.resp-D{background:var(--sage)}
-  .agenda-timeline .tl-marker.status-overdue{box-shadow:0 0 0 3px rgba(155,40,40,.25),0 1px 4px rgba(0,0,0,.18)}
-  .agenda-timeline .tl-marker.status-soon{box-shadow:0 0 0 3px rgba(181,130,16,.25),0 1px 4px rgba(0,0,0,.18)}
-  .agenda-timeline .tl-marker.status-done{background:#1a6e44 !important;border-color:#fff}
+  .agenda-timeline .tl-marker.resp-V{background:var(--resp-v)}      /* Vinicius — navy */
+  .agenda-timeline .tl-marker.resp-G{background:var(--resp-g)}      /* Gabriel — terracota (distinto!) */
+  .agenda-timeline .tl-marker.resp-D{background:var(--resp-d)}      /* Os dois — sage */
+  .agenda-timeline .tl-marker.status-overdue{box-shadow:0 0 0 3px rgba(155,40,40,.45),0 1px 4px rgba(0,0,0,.18)}
+  .agenda-timeline .tl-marker.status-soon{box-shadow:0 0 0 3px rgba(181,130,16,.45),0 1px 4px rgba(0,0,0,.18)}
+  .agenda-timeline .tl-marker.status-done{box-shadow:0 0 0 3px #1a6e44,0 1px 4px rgba(0,0,0,.18);position:relative}
+  .agenda-timeline .tl-marker.status-done::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1 4l2 2 4-4' stroke='white' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat}
   .agenda-timeline .tl-marker.is-phase{width:14px;height:14px;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
   .agenda-timeline .tl-marker.is-phase:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
   .agenda-timeline .tl-label{position:absolute;top:calc(50% - 38px);transform:translateX(-50%);font-size:10.5px;color:var(--ink);font-weight:700;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
@@ -576,11 +580,13 @@
   .agenda-calendar .cal-day.cal-today{background:#fff;outline:2px solid var(--navy)}
   .agenda-calendar .cal-day .cal-num{font-family:'Lora',Georgia,serif;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
   .agenda-calendar .cal-event{font-size:10px;line-height:1.3;padding:3px 6px;border-radius:4px;color:#fff;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .agenda-calendar .cal-event.resp-V{background:#004658}
-  .agenda-calendar .cal-event.resp-G{background:#4C808B}
-  .agenda-calendar .cal-event.resp-D{background:#7CA0A6}
-  .agenda-calendar .cal-event.status-done{background:#1a6e44;text-decoration:line-through;opacity:.75}
-  .agenda-calendar .cal-event.status-overdue{outline:1.5px solid #9b2828}
+  .agenda-calendar .cal-event.resp-V{background:var(--resp-v)}      /* Vinicius — navy */
+  .agenda-calendar .cal-event.resp-G{background:var(--resp-g)}      /* Gabriel — terracota (distinto!) */
+  .agenda-calendar .cal-event.resp-D{background:var(--resp-d)}      /* Os dois — sage */
+  /* status-done: NÃO sobrescreve cor de resp; usa line-through + opacidade */
+  .agenda-calendar .cal-event.status-done{text-decoration:line-through;opacity:.55}
+  .agenda-calendar .cal-event.status-done::before{content:'✓ '}
+  .agenda-calendar .cal-event.status-overdue{outline:2px solid #9b2828;outline-offset:-1px;font-weight:700}
   .agenda-calendar .cal-event.is-phase{font-weight:700;border:1.5px dashed #fff}
 
   /* Aba Fluxo (mapa de dependências) */
@@ -2294,10 +2300,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
             +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
-            +'<span class="ct-reorder interno">'
-              +'<button data-ctmove="-1" title="Subir">\u25b2</button>'
-              +'<button data-ctmove="1" title="Descer">\u25bc</button>'
-            +'</span>'
+            +'<span class="ct-drag-handle interno" title="Arraste pra reordenar" draggable="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
             +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
           +'</div>'
@@ -2329,12 +2332,39 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       if(editBtn) editBtn.addEventListener('click',function(){
         window.openModal(task.phase, task.id);
       });
-      // Wire-up dos botões de reorder ▲▼
-      [].slice.call(wrap.querySelectorAll('[data-ctmove]')).forEach(function(btn){
-        btn.addEventListener('click', function(e){
-          e.preventDefault(); e.stopPropagation();
-          moveCustomTask(task.id, Number(btn.getAttribute('data-ctmove')));
+      // Drag-and-drop pra reordenar (a partir do handle ⋮⋮)
+      var dragHandle = wrap.querySelector('.ct-drag-handle');
+      if(dragHandle){
+        // Inicia drag a partir do handle; o item arrastado é o .custom-task-section
+        dragHandle.addEventListener('dragstart', function(e){
+          wrap.classList.add('ct-dragging');
+          e.dataTransfer.setData('text/ct-id', task.id);
+          e.dataTransfer.effectAllowed = 'move';
+          // Imagem de drag: o próprio card
+          try{ e.dataTransfer.setDragImage(wrap, 20, 20); }catch(err){}
         });
+        dragHandle.addEventListener('dragend', function(){
+          wrap.classList.remove('ct-dragging');
+          [].slice.call(document.querySelectorAll('.custom-task-section.ct-drag-over')).forEach(function(el){
+            el.classList.remove('ct-drag-over');
+          });
+        });
+      }
+      // O alvo (drop target) é o próprio wrap
+      wrap.addEventListener('dragover', function(e){
+        // Só aceita se for de uma custom task
+        if(![].slice.call(e.dataTransfer.types).some(function(t){return t==='text/ct-id';})) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        wrap.classList.add('ct-drag-over');
+      });
+      wrap.addEventListener('dragleave', function(){ wrap.classList.remove('ct-drag-over'); });
+      wrap.addEventListener('drop', function(e){
+        e.preventDefault();
+        wrap.classList.remove('ct-drag-over');
+        var srcId = e.dataTransfer.getData('text/ct-id');
+        if(!srcId || srcId === task.id) return;
+        moveCustomTaskTo(srcId, task.id);
       });
       var delBtn=wrap.querySelector('.ct-del');
       delBtn.setAttribute('data-ctid',task.id);
@@ -2415,14 +2445,30 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     var idx = arr.findIndex(function(t){ return t.id === taskId; });
     if(idx < 0) return;
     var ph = arr[idx].phase;
-    // Acha índices da mesma fase pra calcular vizinhança
     var samePhaseIdx = arr.map(function(t,i){ return t.phase===ph ? i : -1; }).filter(function(i){return i>=0;});
     var pos = samePhaseIdx.indexOf(idx);
     var targetPos = pos + dir;
     if(targetPos < 0 || targetPos >= samePhaseIdx.length) return;
     var targetIdx = samePhaseIdx[targetPos];
-    // Troca
     var tmp = arr[idx]; arr[idx] = arr[targetIdx]; arr[targetIdx] = tmp;
+    saveState(s);
+    recomputeCustomCodes();
+    renderCustomTasks();
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
+  };
+  // Move uma custom task pra antes de outra (drag-and-drop). Funciona entre fases também.
+  window.moveCustomTaskTo = function(srcId, targetId){
+    var s = loadState();
+    var arr = s.custom_tasks || [];
+    var srcIdx = arr.findIndex(function(t){ return t.id === srcId; });
+    var tgtIdx = arr.findIndex(function(t){ return t.id === targetId; });
+    if(srcIdx < 0 || tgtIdx < 0 || srcIdx === tgtIdx) return;
+    // Se mudou de fase, herda a fase do alvo (drop entre fases significa "agora pertence a essa fase")
+    var moved = arr.splice(srcIdx, 1)[0];
+    moved.phase = arr[tgtIdx > srcIdx ? tgtIdx - 1 : tgtIdx].phase;
+    // Recalcula índice do alvo após o splice
+    var newTgtIdx = arr.findIndex(function(t){ return t.id === targetId; });
+    arr.splice(newTgtIdx, 0, moved);
     saveState(s);
     recomputeCustomCodes();
     renderCustomTasks();
@@ -3068,12 +3114,13 @@ window.setRespFilter = function(rf){
         <p class="agenda-sub">Marcos das tarefas e fases, com cor por responsável. Cinza = sem data. Vermelho = atrasado. Amarelo = vence em até 7 dias. Verde = concluído.</p>
       </div>
       <div class="agenda-legend">
-        <span class="leg-dot" style="background:#004658"></span>Vinicius
-        <span class="leg-dot" style="background:#4C808B"></span>Gabriel
-        <span class="leg-dot" style="background:#BCCCCE"></span>Os dois
-        <span class="leg-dot" style="background:#9b2828;margin-left:14px"></span>Atrasado
+        <span class="leg-dot" style="background:var(--resp-v)"></span>Vinicius
+        <span class="leg-dot" style="background:var(--resp-g)"></span>Gabriel
+        <span class="leg-dot" style="background:var(--resp-d)"></span>Os dois
+        <span style="display:inline-block;width:1px;height:14px;background:var(--line);margin:0 8px"></span>
+        <span class="leg-dot" style="background:#9b2828"></span>Atrasado
         <span class="leg-dot" style="background:#b58210"></span>Próximo
-        <span class="leg-dot" style="background:#1a6e44"></span>Concluído
+        <span class="leg-dot" style="background:#1a6e44"></span>Concluído (com ✓)
       </div>
     </div>
     <h3 class="agenda-section-title">Linha do tempo — marcos por responsável</h3>
