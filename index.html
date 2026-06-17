@@ -277,6 +277,29 @@
   .taskint .det{font-size:12.5px;color:var(--ink);line-height:1.5;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start}
   .taskint .det .k{flex:none;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:#fff;border:1px solid var(--sage);border-radius:3px;padding:2px 7px;min-width:66px;text-align:center;margin-top:1px}
   .taskint .tfoot{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;margin-top:12px}
+  /* Chip de data de entrega — aparece junto ao código da task */
+  .due-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:11px;background:var(--soft);color:var(--gray);font-variant-numeric:tabular-nums;letter-spacing:.02em;border:1px solid var(--line);white-space:nowrap;margin-left:6px;vertical-align:middle}
+  .due-chip.overdue{background:#fce8e8;color:#9b2828;border-color:#e8b4b4}
+  .due-chip.soon{background:#fff5dc;color:#7a5d12;border-color:#e6c98a}
+  .due-chip.done{background:#e3f3e9;color:#1a6e44;border-color:#a8d4b8}
+  .due-chip.empty{opacity:.55;font-weight:500}
+  .due-input-wrap{display:inline-flex;align-items:center;gap:6px;font-size:10.5px}
+  .due-input-wrap label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:700}
+  .due-input-wrap input[type=date]{font-family:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;color:var(--ink);background:#fff;cursor:pointer}
+  .due-input-wrap input[type=date]:focus{outline:none;border-color:var(--navy)}
+  .due-input-wrap .due-clear{background:none;border:none;color:var(--gray);cursor:pointer;font-size:14px;line-height:1;padding:0 4px}
+  .due-input-wrap .due-clear:hover{color:#b03030}
+  /* Data por fase — chip no header da fase */
+  .phase-due{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:12px;background:var(--soft);color:var(--gray);font-variant-numeric:tabular-nums;border:1px solid var(--line);margin-left:10px;letter-spacing:.01em;white-space:nowrap}
+  .phase-due.set{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .phase-due.set.overdue{background:#9b2828;border-color:#9b2828}
+  .phase-due.set.soon{background:#b58210;border-color:#b58210}
+  .phase-due.set.done{background:#1a6e44;border-color:#1a6e44}
+  .phase-due-input{margin-left:8px;display:none}
+  body.internal-on .phase-due-input{display:inline-flex;align-items:center;gap:6px}
+  body.internal-on .phase-due-input input[type=date]{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:5px;padding:3px 7px;color:var(--ink);background:#fff}
+  /* esconde o chip "sem prazo" pra cliente — só interna vê (já que cliente não pode setar) */
+  body:not(.internal-on) .phase-due:not(.set){display:none}
   .resp{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
   .resp .rlab{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:700;padding:0 11px}
   .resp button{font-family:var(--body);font-size:10.5px;font-weight:700;padding:6px 12px;background:#fff;color:var(--gray);border:none;border-left:1px solid var(--line);cursor:pointer}
@@ -357,6 +380,12 @@
   .custom-task-item .ct-edit{background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 4px;display:none}
   .custom-task-item .ct-edit:hover{color:var(--navy)}
   body.internal-on .custom-task-item .ct-edit{display:inline-block}
+  /* Botões de reorder ▲▼ na custom task */
+  .custom-task-item .ct-reorder{display:none;align-items:center;gap:2px}
+  body.internal-on .custom-task-item .ct-reorder{display:inline-flex}
+  .custom-task-item .ct-reorder button{background:transparent;border:1px solid var(--line);color:var(--gray);font-size:9px;cursor:pointer;padding:2px 5px;border-radius:3px;line-height:1;transition:all .12s}
+  .custom-task-item .ct-reorder button:hover{background:var(--soft);color:var(--navy);border-color:var(--sage)}
+  .custom-task-item .ct-reorder button:disabled{opacity:.35;cursor:not-allowed}
   /* footer com status / responsável / stamp na custom task — só aparece na visão interna */
   .custom-task-item .ct-tfoot{display:none}
   body.internal-on .custom-task-item .ct-tfoot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
@@ -1271,7 +1300,7 @@
     if(b._neonBound) return;
     b._neonBound = true;
     if(state.checks[b.id]) b.checked=true;
-    b.addEventListener('change',function(){ state.checks[b.id]=b.checked; save(); render(); });
+    b.addEventListener('change',function(){ state.checks[b.id]=b.checked; save(); render(); renderDueChip(b.id); });
   }
   function rescanBoxes(){
     boxes = [].slice.call(document.querySelectorAll(BOX_SEL));
@@ -1385,6 +1414,7 @@
     document.getElementById('ringFill').style.strokeDashoffset=(RING_CIRC*(1-ov)).toFixed(2);
     var lab=document.querySelector('.ring .lab'); if(lab) lab.textContent=(pr===100?'projeto concluído':'concluído');
     renderByResp();
+    renderAllDueChips();
   }
   function renderByResp(){
     var by = {V:{done:0,total:0}, G:{done:0,total:0}, D:{done:0,total:0}};
@@ -1422,7 +1452,129 @@
 
 
   // ── TÍTULOS EDITÁVEIS + EXCLUSÃO ──────────────────────────────
-  ['titles','deleted'].forEach(function(k){ if(!state[k]) state[k]={}; });
+  ['titles','deleted','due_dates','phase_due'].forEach(function(k){ if(!state[k]) state[k]={}; });
+
+  // ── DATAS DE ENTREGA — utilitários ─────────────────────────────
+  var MES_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  function fmtDate(iso){
+    if(!iso) return '';
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return iso;
+    return Number(m[3]) + '/' + MES_SHORT[Number(m[2])-1] + '/' + m[1].slice(2);
+  }
+  function todayISO(){
+    var d = new Date(); var y = d.getFullYear(); var m = String(d.getMonth()+1).padStart(2,'0'); var dd = String(d.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + dd;
+  }
+  function daysUntil(iso){
+    if(!iso) return null;
+    var t = todayISO();
+    // diff via Date (UTC pra evitar TZ shift)
+    var dueD = new Date(iso + 'T00:00:00');
+    var todayD = new Date(t + 'T00:00:00');
+    return Math.round((dueD - todayD) / 86400000);
+  }
+  function dueStatus(iso, isDone){
+    if(!iso) return 'empty';
+    if(isDone) return 'done';
+    var d = daysUntil(iso);
+    if(d < 0) return 'overdue';
+    if(d <= 7) return 'soon';
+    return 'ok';
+  }
+  // Atualiza o chip de data de uma task pelo seu id (input do checkbox).
+  function renderDueChip(id){
+    var cb = document.getElementById(id); if(!cb) return;
+    var due = state.due_dates[id] || '';
+    var isDone = !!cb.checked;
+    var status = dueStatus(due, isDone);
+    // Achata o chip antigo se existir
+    var oldChip = document.querySelector('.due-chip[data-due-for="'+id+'"]');
+    if(oldChip) oldChip.remove();
+    if(!due) return; // não mostra nada se não tem data
+    var chip = document.createElement('span');
+    chip.className = 'due-chip ' + status;
+    chip.setAttribute('data-due-for', id);
+    chip.innerHTML = '📅 ' + fmtDate(due);
+    // Acopla o chip no lugar certo: pra nativas no .lbl (depois de .txt); pra custom no .ct-hd (depois de .ct-title)
+    var lbl = cb.closest && cb.closest('label.task') ? cb.closest('label.task').querySelector('.lbl') : null;
+    if(lbl){
+      var txt = lbl.querySelector('.txt');
+      if(txt) txt.appendChild(chip);
+      else lbl.appendChild(chip);
+      return;
+    }
+    var ctHd = cb.closest && cb.closest('.custom-task-item') ? cb.closest('.custom-task-item').querySelector('.ct-hd') : null;
+    if(ctHd){
+      var ctTitle = ctHd.querySelector('.ct-title');
+      if(ctTitle) ctTitle.appendChild(chip);
+      else ctHd.appendChild(chip);
+    }
+  }
+  function renderAllDueChips(){
+    boxes.forEach(function(b){ renderDueChip(b.id); });
+    renderPhaseDueChips();
+  }
+  window.renderAllDueChips = renderAllDueChips;
+
+  // ── DATA DE ENTREGA POR FASE ───────────────────────────────────
+  function injectPhaseDueChips(){
+    var phases = document.querySelectorAll('.phase[data-phase]');
+    phases.forEach(function(phEl){
+      var phaseNum = phEl.getAttribute('data-phase');
+      var head = phEl.querySelector('.ph-head');
+      if(!head || head.querySelector('[data-phase-due-for]')) return;
+      // Chip visível em ambas visões (interna e cliente)
+      var chip = document.createElement('span');
+      chip.className = 'phase-due';
+      chip.setAttribute('data-phase-due-for', phaseNum);
+      chip.textContent = '📅 sem prazo';
+      // Input de data (só visível na interna via CSS .phase-due-input)
+      var inputWrap = document.createElement('span');
+      inputWrap.className = 'phase-due-input';
+      inputWrap.innerHTML = '<input type="date" data-phase-due-input="'+phaseNum+'"><button class="due-clear" title="Limpar data" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:14px;line-height:1;padding:0 4px">×</button>';
+      // Insere no .ph-prog ou no head se não existir
+      var prog = head.querySelector('.ph-prog');
+      var target = prog || head;
+      target.appendChild(chip);
+      target.appendChild(inputWrap);
+      // Wire-up
+      var inp = inputWrap.querySelector('input');
+      var clr = inputWrap.querySelector('.due-clear');
+      if(state.phase_due[phaseNum]) inp.value = state.phase_due[phaseNum];
+      inp.addEventListener('change', function(){
+        if(inp.value) state.phase_due[phaseNum] = inp.value;
+        else delete state.phase_due[phaseNum];
+        save(); renderPhaseDueChips();
+      });
+      clr.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        inp.value = '';
+        delete state.phase_due[phaseNum];
+        save(); renderPhaseDueChips();
+      });
+    });
+  }
+  function renderPhaseDueChips(){
+    [].slice.call(document.querySelectorAll('[data-phase-due-for]')).forEach(function(chip){
+      var p = chip.getAttribute('data-phase-due-for');
+      var iso = state.phase_due[p];
+      if(!iso){
+        chip.className = 'phase-due';
+        chip.textContent = '📅 sem prazo';
+        return;
+      }
+      // Determina status da fase: olhar se TODAS as tasks da fase estão done
+      var phaseDone = false;
+      var phEl = document.querySelector('.phase[data-phase="'+p+'"]');
+      if(phEl) phaseDone = phEl.classList.contains('complete');
+      var status = dueStatus(iso, phaseDone);
+      chip.className = 'phase-due set ' + status;
+      chip.textContent = '📅 entrega ' + fmtDate(iso);
+    });
+  }
+  // Espera DOM pronto pra injetar (rodamos depois do boot principal)
+  setTimeout(function(){ injectPhaseDueChips(); renderPhaseDueChips(); }, 100);
 
   var _intCtrlDone=false;
   function applyInternalControls(){
@@ -1440,6 +1592,33 @@
       el.addEventListener('input',function(){ state.titles[id]=el.textContent.trim(); save(); });
       el.addEventListener('blur',function(){ state.titles[id]=el.textContent.trim(); save(); });
       el.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();el.blur();} });
+    });
+
+    // adiciona input de data de entrega em cada taskint, dentro do .tfoot (depois de .resp)
+    [].slice.call(document.querySelectorAll('.taskint')).forEach(function(ti){
+      var st=ti.querySelector('.status'); var id=st?st.getAttribute('data-task'):null; if(!id) return;
+      var tfoot = ti.querySelector('.tfoot'); if(!tfoot || tfoot.querySelector('.due-input-wrap')) {} else {
+        var wrap = document.createElement('span');
+        wrap.className = 'due-input-wrap';
+        wrap.innerHTML = '<label>Entrega</label><input type="date" data-due-input="'+id+'" value="'+(state.due_dates[id]||'')+'"><button class="due-clear" title="Limpar data">×</button>';
+        // Insere antes do .stamp (que fica no fim)
+        var stamp = tfoot.querySelector('.stamp');
+        if(stamp) tfoot.insertBefore(wrap, stamp); else tfoot.appendChild(wrap);
+        var inp = wrap.querySelector('input');
+        var clr = wrap.querySelector('.due-clear');
+        inp.addEventListener('change', function(){
+          var v = inp.value;
+          if(v) state.due_dates[id] = v;
+          else delete state.due_dates[id];
+          save(); renderDueChip(id); touch(id);
+        });
+        clr.addEventListener('click', function(e){
+          e.preventDefault(); e.stopPropagation();
+          inp.value = '';
+          delete state.due_dates[id];
+          save(); renderDueChip(id); touch(id);
+        });
+      }
     });
 
     // adiciona linha de exclusão em cada taskint
@@ -1779,7 +1958,7 @@
 <div class="modal-bg" id="addTaskModal">
   <div class="modal-card">
     <h3 id="addTaskModalTitle">Adicionar etapa</h3>
-    <div class="modal-field"><label>Código (ex: 2.11, N.1)</label><input type="text" id="newTaskCode" placeholder="ex: 2.11"></div>
+    <input type="hidden" id="newTaskCode" value=""><!-- código auto: gerado por recomputeCustomCodes baseado na ordem -->
     <div class="modal-field"><label>Título da etapa *</label><input type="text" id="newTaskTitle" placeholder="Descreva o que esta etapa faz"></div>
     <div class="modal-field"><label>O quê</label><textarea id="newTaskOque" placeholder="O que é esta etapa?"></textarea></div>
     <div class="modal-field"><label>Pra quê</label><textarea id="newTaskPraque" placeholder="Qual o objetivo desta etapa?"></textarea></div>
@@ -1985,6 +2164,10 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
             +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
+            +'<span class="ct-reorder interno">'
+              +'<button data-ctmove="-1" title="Subir">\u25b2</button>'
+              +'<button data-ctmove="1" title="Descer">\u25bc</button>'
+            +'</span>'
             +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
           +'</div>'
@@ -2002,6 +2185,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
               +'<button data-r="G">Gabriel</button>'
               +'<button data-r="D">Os dois</button>'
             +'</div>'
+            +'<span class="due-input-wrap"><label>Entrega</label><input type="date" data-due-input="'+esc(task.id)+'"><button class="due-clear" title="Limpar data">\u00d7</button></span>'
             +'<span class="stamp" data-stamp="'+esc(task.id)+'"></span>'
           +'</div>'
         +'</div>';
@@ -2015,6 +2199,13 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       if(editBtn) editBtn.addEventListener('click',function(){
         window.openModal(task.phase, task.id);
       });
+      // Wire-up dos botões de reorder ▲▼
+      [].slice.call(wrap.querySelectorAll('[data-ctmove]')).forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.preventDefault(); e.stopPropagation();
+          moveCustomTask(task.id, Number(btn.getAttribute('data-ctmove')));
+        });
+      });
       var delBtn=wrap.querySelector('.ct-del');
       delBtn.setAttribute('data-ctid',task.id);
       delBtn.addEventListener('click',function(){
@@ -2023,20 +2214,90 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
         s.custom_tasks=(s.custom_tasks||[]).filter(function(x){return x.id!==task.id;});
         // limpa o check pra n\u00e3o deixar lixo no state
         if(s.checks) delete s.checks[task.id];
+        if(s.due_dates) delete s.due_dates[task.id];
         saveState(s);
         renderCustomTasks();
         if(window.refreshNeonProgress) window.refreshNeonProgress();
       });
+      // Wire-up do input de data
+      var dueInp = wrap.querySelector('input[data-due-input]');
+      var dueClr = wrap.querySelector('.due-clear');
+      if(dueInp){
+        var s0 = loadState();
+        if(s0.due_dates && s0.due_dates[task.id]) dueInp.value = s0.due_dates[task.id];
+        dueInp.addEventListener('change', function(){
+          var ss = loadState();
+          if(!ss.due_dates) ss.due_dates = {};
+          if(dueInp.value) ss.due_dates[task.id] = dueInp.value;
+          else delete ss.due_dates[task.id];
+          saveState(ss);
+          if(window.renderAllDueChips) window.renderAllDueChips();
+        });
+        if(dueClr) dueClr.addEventListener('click', function(e){
+          e.preventDefault(); e.stopPropagation();
+          dueInp.value = '';
+          var ss = loadState();
+          if(ss.due_dates) delete ss.due_dates[task.id];
+          saveState(ss);
+          if(window.renderAllDueChips) window.renderAllDueChips();
+        });
+      }
       try{ if(btn.parentNode) btn.parentNode.insertBefore(wrap,btn); }catch(e){}
     });
     // Notifica o script principal pra rebindar os novos checkboxes + status/resp e recalcular o anel.
     if(window.refreshNeonProgress) window.refreshNeonProgress();
     if(window.refreshStatusResp) window.refreshStatusResp();
+    if(window.renderAllDueChips) window.renderAllDueChips();
   }
 
   /* ---- modal ---- */
   var _phase=0;
   var _editingId=null; // null = criar; setado = editar
+
+  // Retorna o maior número Y entre os IDs nativos fX-Y daquela fase
+  function maxNativeIdx(phase){
+    var max = 0;
+    [].slice.call(document.querySelectorAll('label.task input[type=checkbox][data-phase="'+phase+'"]')).forEach(function(cb){
+      var m = (cb.id||'').match(/^f\d+-(\d+)$/);
+      if(m) max = Math.max(max, Number(m[1]));
+    });
+    return max;
+  }
+  // Renumera todas as custom tasks no estado, agrupadas por fase.
+  // Custom task fica como "phase.(max_nativo + posição_relativa + 1)".
+  function recomputeCustomCodes(){
+    var s = loadState();
+    if(!s.custom_tasks || !s.custom_tasks.length) return;
+    var byPhase = {};
+    s.custom_tasks.forEach(function(t){ (byPhase[t.phase] = byPhase[t.phase]||[]).push(t); });
+    Object.keys(byPhase).forEach(function(ph){
+      var base = maxNativeIdx(ph);
+      byPhase[ph].forEach(function(t, i){
+        t.code = ph + '.' + (base + i + 1);
+      });
+    });
+    saveState(s);
+  }
+  // Move uma custom task dentro do array (apenas entre tasks da mesma fase).
+  window.moveCustomTask = function(taskId, dir){
+    var s = loadState();
+    var arr = s.custom_tasks || [];
+    var idx = arr.findIndex(function(t){ return t.id === taskId; });
+    if(idx < 0) return;
+    var ph = arr[idx].phase;
+    // Acha índices da mesma fase pra calcular vizinhança
+    var samePhaseIdx = arr.map(function(t,i){ return t.phase===ph ? i : -1; }).filter(function(i){return i>=0;});
+    var pos = samePhaseIdx.indexOf(idx);
+    var targetPos = pos + dir;
+    if(targetPos < 0 || targetPos >= samePhaseIdx.length) return;
+    var targetIdx = samePhaseIdx[targetPos];
+    // Troca
+    var tmp = arr[idx]; arr[idx] = arr[targetIdx]; arr[targetIdx] = tmp;
+    saveState(s);
+    recomputeCustomCodes();
+    renderCustomTasks();
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
+  };
 
   function populateSelect(selEl, selected){
     selEl.innerHTML='';
@@ -2088,15 +2349,14 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   window.confirmAddTask=function(){
     var title=document.getElementById('newTaskTitle').value.trim();
     if(!title){alert('O t\u00edtulo \u00e9 obrigat\u00f3rio.');return;}
-    var code=document.getElementById('newTaskCode').value.trim()||('C.'+Date.now().toString().slice(-3));
     var depends = getSelectedValues(document.getElementById('newTaskDepends'));
     var unlocks = getSelectedValues(document.getElementById('newTaskUnlocks'));
     var st=loadState(); if(!st.custom_tasks) st.custom_tasks=[];
     if(_editingId){
-      // Modo editar: atualiza task existente preservando id/checks
+      // Modo editar: atualiza task existente preservando id/checks/c\u00f3digo (c\u00f3digo \u00e9 auto)
       var t = st.custom_tasks.find(function(x){return x.id===_editingId;});
       if(t){
-        t.phase = _phase; t.code=code; t.title=title;
+        t.phase = _phase; t.title=title;
         t.oque = document.getElementById('newTaskOque').value.trim();
         t.praque = document.getElementById('newTaskPraque').value.trim();
         t.como = document.getElementById('newTaskComo').value.trim();
@@ -2104,9 +2364,9 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
         t.unlocks = unlocks;
       }
     } else {
-      // Modo criar
+      // Modo criar \u2014 c\u00f3digo auto (ser\u00e1 definido por recomputeCustomCodes)
       var task={
-        id:'ct_'+Date.now(),phase:_phase,code:code,title:title,
+        id:'ct_'+Date.now(),phase:_phase,code:'',title:title,
         oque:document.getElementById('newTaskOque').value.trim(),
         praque:document.getElementById('newTaskPraque').value.trim(),
         como:document.getElementById('newTaskComo').value.trim(),
@@ -2116,6 +2376,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       st.custom_tasks.push(task);
     }
     saveState(st);
+    recomputeCustomCodes();
     closeAddTaskModal();
     renderCustomTasks();
     if(window.refreshNeonProgress) window.refreshNeonProgress();
@@ -2143,7 +2404,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   obs.observe(document.body,{attributes:true});
 
   /* run on load always — buttons stay hidden via CSS in client view, custom tasks show in both */
-  function _initAddTask(){ injectButtons(); renderCustomTasks(); }
+  function _initAddTask(){ injectButtons(); recomputeCustomCodes(); renderCustomTasks(); }
   if(document.readyState!=='loading') setTimeout(_initAddTask,250);
   else document.addEventListener('DOMContentLoaded',function(){setTimeout(_initAddTask,250);});
 })();
