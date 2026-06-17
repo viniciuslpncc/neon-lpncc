@@ -480,6 +480,61 @@
   .section.collapsible.collapsed .head{padding-bottom:0;margin-bottom:0}
 </style>
 <style>
+  /* Aba Agenda (timeline + calendário) */
+  #sec-agenda{display:none;position:fixed;inset:0;background:#f4f7f7;z-index:40;overflow-y:auto;padding-top:24px}
+  body.agenda-on #sec-agenda{display:block}
+  body.agenda-on > .topbar{position:fixed;top:0;left:0;right:0;z-index:50}
+  body.agenda-on > .wrap, body.agenda-on > .intbar, body.agenda-on > footer{display:none !important}
+  /* Botão "Agenda" só aparece pra quem já está na visão interna (e agenda-on permite continuar visível) */
+  #btnAgd{display:none}
+  body.internal-on #btnAgd, body.agenda-on #btnAgd{display:inline-flex}
+  .agenda-wrap{max-width:1200px;margin:0 auto;padding:90px 40px 60px;font-family:var(--body)}
+  .agenda-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:28px;flex-wrap:wrap}
+  .agenda-head h2{font-family:'Lora',Georgia,serif;color:var(--navy);font-size:28px;margin:8px 0 6px;font-weight:700}
+  .agenda-head .agenda-sub{font-size:13px;color:var(--gray);line-height:1.55;max-width:580px}
+  .agenda-legend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--gray);flex-wrap:wrap}
+  .agenda-legend .leg-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .agenda-section-title{font-family:'Lora',Georgia,serif;color:var(--navy);font-size:18px;margin:28px 0 14px;font-weight:700;border-top:1px solid var(--line);padding-top:24px}
+  .agenda-empty{font-size:13px;color:var(--gray);font-style:italic;padding:24px;background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center}
+
+  /* Timeline */
+  .agenda-timeline{background:#fff;border:1px solid var(--line);border-radius:10px;padding:30px 24px 24px;position:relative;overflow-x:auto;min-height:140px}
+  .agenda-timeline .tl-line{position:relative;height:2px;background:var(--line);margin:50px 30px 50px}
+  .agenda-timeline .tl-today{position:absolute;width:2px;background:var(--navy);top:-25px;bottom:-25px;z-index:1}
+  .agenda-timeline .tl-today::after{content:'hoje';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--navy);background:#fff;padding:2px 6px;border:1px solid var(--navy);border-radius:9px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .agenda-timeline .tl-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer;z-index:2;transition:transform .15s}
+  .agenda-timeline .tl-marker:hover{transform:translate(-50%,-50%) scale(1.4)}
+  .agenda-timeline .tl-marker.resp-V{background:#004658}
+  .agenda-timeline .tl-marker.resp-G{background:#4C808B}
+  .agenda-timeline .tl-marker.resp-D{background:var(--sage)}
+  .agenda-timeline .tl-marker.status-overdue{box-shadow:0 0 0 3px rgba(155,40,40,.25),0 1px 4px rgba(0,0,0,.18)}
+  .agenda-timeline .tl-marker.status-soon{box-shadow:0 0 0 3px rgba(181,130,16,.25),0 1px 4px rgba(0,0,0,.18)}
+  .agenda-timeline .tl-marker.status-done{background:#1a6e44 !important;border-color:#fff}
+  .agenda-timeline .tl-marker.is-phase{width:14px;height:14px;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
+  .agenda-timeline .tl-marker.is-phase:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
+  .agenda-timeline .tl-label{position:absolute;top:calc(50% - 38px);transform:translateX(-50%);font-size:10.5px;color:var(--ink);font-weight:700;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+  .agenda-timeline .tl-date{position:absolute;top:calc(50% + 18px);transform:translateX(-50%);font-size:9.5px;color:var(--gray);font-variant-numeric:tabular-nums;pointer-events:none}
+  .agenda-timeline .tl-marker[data-flip="1"] ~ .tl-label, .agenda-timeline .tl-marker.flip + .tl-label{top:calc(50% + 16px)}
+
+  /* Calendário */
+  .agenda-cal-nav{display:flex;align-items:center;gap:14px;margin-bottom:14px;font-family:'Lora',Georgia,serif;color:var(--navy)}
+  .agenda-cal-nav button{background:#fff;border:1px solid var(--line);color:var(--navy);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:700}
+  .agenda-cal-nav button:hover{background:var(--soft)}
+  .agenda-cal-nav #agdMonth{font-size:18px;font-weight:700;min-width:170px;text-align:center}
+  .agenda-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px}
+  .agenda-calendar .cal-wd{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);font-weight:700;text-align:center;padding:6px 0}
+  .agenda-calendar .cal-day{min-height:88px;background:var(--soft);border-radius:7px;padding:6px 8px;font-size:11px;color:var(--ink);position:relative;overflow:hidden}
+  .agenda-calendar .cal-day.cal-other{opacity:.35}
+  .agenda-calendar .cal-day.cal-today{background:#fff;outline:2px solid var(--navy)}
+  .agenda-calendar .cal-day .cal-num{font-family:'Lora',Georgia,serif;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .agenda-calendar .cal-event{font-size:10px;line-height:1.3;padding:3px 6px;border-radius:4px;color:#fff;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .agenda-calendar .cal-event.resp-V{background:#004658}
+  .agenda-calendar .cal-event.resp-G{background:#4C808B}
+  .agenda-calendar .cal-event.resp-D{background:#7CA0A6}
+  .agenda-calendar .cal-event.status-done{background:#1a6e44;text-decoration:line-through;opacity:.75}
+  .agenda-calendar .cal-event.status-overdue{outline:1.5px solid #9b2828}
+  .agenda-calendar .cal-event.is-phase{font-weight:700;border:1.5px dashed #fff}
+
   /* Aba Fluxo (mapa de dependências) */
   #sec-fluxo{display:none;position:fixed;inset:0;background:#f4f7f7;z-index:40}
   #sec-fluxo iframe{width:100%;height:100%;border:0;display:block}
@@ -501,6 +556,7 @@
       <button id="btnCli" class="active" onclick="setView('cliente')">Visão do cliente</button>
       <button id="btnCon" onclick="event.stopPropagation();setView('contrato')">Contrato</button>
       <button id="btnFlx" onclick="event.stopPropagation();setView('fluxo')">Fluxo</button>
+      <button id="btnAgd" onclick="event.stopPropagation();setView('agenda')">Agenda</button>
     <button id="btnInt" onclick="askInternal()"><svg class="lk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Visão interna</button>
     </div>
   </div>
@@ -1438,10 +1494,12 @@
     try{applyTitleOverrides();}catch(e){}
     document.body.classList.toggle('internal-on', v==='interna');
     document.body.classList.toggle('contrato-on', v==='contrato');
-    ['btnCli','btnInt','btnCon','btnFlx'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
-    var actId={cliente:'btnCli',interna:'btnInt',contrato:'btnCon',fluxo:'btnFlx'}[v];
+    document.body.classList.toggle('agenda-on', v==='agenda');
+    ['btnCli','btnInt','btnCon','btnFlx','btnAgd'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
+    var actId={cliente:'btnCli',interna:'btnInt',contrato:'btnCon',fluxo:'btnFlx',agenda:'btnAgd'}[v];
     if(actId){ var el2=document.getElementById(actId); if(el2) el2.classList.add('active'); }
     if(v==='interna') setTimeout(applyInternalControls,50);
+    if(v==='agenda' && window.renderAgenda) setTimeout(window.renderAgenda, 80);
   };
   window.askInternal=function(){ if(unlocked){ window.setView('interna'); return; } document.getElementById('lockbg').classList.add('show'); setTimeout(function(){ document.getElementById('pwd').focus(); },50); };
   window.closeLock=function(){ document.getElementById('lockbg').classList.remove('show'); var p=document.getElementById('pwd'); p.value=''; p.classList.remove('err'); };
@@ -2548,6 +2606,173 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
 </script>
 
 <script>
+/* ── AGENDA — Timeline + Calendário ─────────────────────────────── */
+(function(){
+  var KEY='projeto_neon_lpncc';
+  var MES_LONG=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var WD_SHORT=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  var PHASE_NAMES={0:'Fundação',1:'Fluxo Único',2:'Comercial Ativo',3:'Gestão',4:'Plataformas (2B)'};
+  var agdCurrent={y:new Date().getFullYear(),m:new Date().getMonth()};
+
+  function _state(){ try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};} }
+  function _resp(id, st){
+    return (st.resp && st.resp[id]) || (window.RESP_DEFAULT||{})[id] || 'D';
+  }
+  function _titleOfTask(id, st){
+    if(id.indexOf('ct_')===0){
+      var t = (st.custom_tasks||[]).find(function(x){return x.id===id;});
+      return t ? (t.code+' '+t.title) : id;
+    }
+    // nativa: pega do DOM (com override aplicado)
+    var el = document.querySelector('span[data-tid="'+id+'"]');
+    if(el) return (el.parentNode.querySelector('.code')||{}).textContent + ' ' + el.textContent;
+    return id;
+  }
+  function _isDone(id, st){ return !!(st.checks && st.checks[id]); }
+  function _isPhaseDone(p){
+    var phEl = document.querySelector('.phase[data-phase="'+p+'"]');
+    return phEl ? phEl.classList.contains('complete') : false;
+  }
+  function _status(iso, isDone){
+    if(!iso) return 'empty';
+    if(isDone) return 'done';
+    var t = new Date(); t.setHours(0,0,0,0);
+    var d = new Date(iso+'T00:00:00');
+    var diff = Math.round((d-t)/86400000);
+    if(diff < 0) return 'overdue';
+    if(diff <= 7) return 'soon';
+    return 'ok';
+  }
+  function collectMilestones(){
+    var st = _state();
+    var ms = [];
+    Object.keys(st.due_dates||{}).forEach(function(id){
+      var iso = st.due_dates[id]; if(!iso) return;
+      ms.push({
+        type:'task', id:id, iso:iso,
+        resp:_resp(id,st), title:_titleOfTask(id,st), done:_isDone(id,st)
+      });
+    });
+    Object.keys(st.phase_due||{}).forEach(function(p){
+      var iso = st.phase_due[p]; if(!iso) return;
+      ms.push({
+        type:'phase', id:'phase-'+p, iso:iso,
+        resp:'D', title:'Fase '+p+' — '+(PHASE_NAMES[p]||p)+' (entrega)',
+        done:_isPhaseDone(p)
+      });
+    });
+    return ms.sort(function(a,b){return a.iso.localeCompare(b.iso);});
+  }
+
+  function renderTimeline(){
+    var tl = document.getElementById('agenda-timeline');
+    var empty = document.getElementById('agenda-timeline-empty');
+    if(!tl) return;
+    var ms = collectMilestones();
+    if(!ms.length){
+      tl.innerHTML = '';
+      empty.style.display='block';
+      tl.style.display='none';
+      return;
+    }
+    empty.style.display='none';
+    tl.style.display='block';
+    // Calcula range: do mais cedo entre (hoje, primeiro marco) ao mais tarde
+    var today = new Date(); today.setHours(0,0,0,0);
+    var firstD = new Date(ms[0].iso+'T00:00:00');
+    var lastD = new Date(ms[ms.length-1].iso+'T00:00:00');
+    var minD = today < firstD ? today : firstD;
+    minD = new Date(minD.getTime() - 86400000*7); // 7 dias de folga à esquerda
+    var maxD = new Date(lastD.getTime() + 86400000*14); // 14 dias à direita
+    var range = (maxD - minD) || 1;
+    function pct(date){ return ((date-minD)/range)*100; }
+    var html = '<div class="tl-line">';
+    // Linha do hoje
+    html += '<div class="tl-today" style="left:'+pct(today)+'%"></div>';
+    // Marcadores
+    ms.forEach(function(m, i){
+      var d = new Date(m.iso+'T00:00:00');
+      var p = pct(d);
+      var status = _status(m.iso, m.done);
+      var cls = 'tl-marker resp-'+m.resp+' status-'+status + (m.type==='phase'?' is-phase':'');
+      var flip = i % 2 === 1 ? ' flip' : '';
+      var fmt = (function(s){var x=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return x?Number(x[3])+'/'+['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][Number(x[2])-1]:s;})(m.iso);
+      html += '<div class="'+cls+flip+'" style="left:'+p+'%" title="'+(m.title.replace(/"/g,'&quot;'))+' — '+fmt+'"></div>';
+      html += '<div class="tl-label" style="left:'+p+'%;top:calc(50% '+(i%2===1?'+':'-')+' 28px)">'+escapeHtml(m.title.length>26?m.title.slice(0,26)+'…':m.title)+'</div>';
+      html += '<div class="tl-date" style="left:'+p+'%;top:calc(50% '+(i%2===1?'-':'+')+' 16px)">'+fmt+'</div>';
+    });
+    html += '</div>';
+    tl.innerHTML = html;
+  }
+
+  function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  function renderCalendar(){
+    var cal = document.getElementById('agenda-calendar');
+    var monthLbl = document.getElementById('agdMonth');
+    if(!cal) return;
+    var y = agdCurrent.y, m = agdCurrent.m;
+    monthLbl.textContent = MES_LONG[m]+' '+y;
+    var first = new Date(y, m, 1);
+    var startWd = first.getDay();
+    var daysInMonth = new Date(y, m+1, 0).getDate();
+    var daysInPrev = new Date(y, m, 0).getDate();
+    // Agrupa milestones por dia
+    var ms = collectMilestones();
+    var byDay = {};
+    ms.forEach(function(item){
+      (byDay[item.iso] = byDay[item.iso]||[]).push(item);
+    });
+    var html = '';
+    WD_SHORT.forEach(function(w){ html += '<div class="cal-wd">'+w+'</div>'; });
+    var todayISO = (function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+    // Dias do mês anterior (preenchimento)
+    for(var i=0;i<startWd;i++){
+      var dayN = daysInPrev - startWd + 1 + i;
+      var iso = (m===0?y-1:y)+'-'+String(m===0?12:m).padStart(2,'0')+'-'+String(dayN).padStart(2,'0');
+      html += '<div class="cal-day cal-other"><div class="cal-num">'+dayN+'</div>'+cellEvents(byDay[iso])+'</div>';
+    }
+    // Dias do mês corrente
+    for(var d=1;d<=daysInMonth;d++){
+      var iso2 = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      var isToday = iso2===todayISO;
+      html += '<div class="cal-day'+(isToday?' cal-today':'')+'"><div class="cal-num">'+d+'</div>'+cellEvents(byDay[iso2])+'</div>';
+    }
+    // Dias do próximo mês (até completar grid)
+    var totalCells = startWd + daysInMonth;
+    var pad = (7 - (totalCells % 7)) % 7;
+    for(var k=1;k<=pad;k++){
+      var iso3 = (m===11?y+1:y)+'-'+String(m===11?1:m+2).padStart(2,'0')+'-'+String(k).padStart(2,'0');
+      html += '<div class="cal-day cal-other"><div class="cal-num">'+k+'</div>'+cellEvents(byDay[iso3])+'</div>';
+    }
+    cal.innerHTML = html;
+  }
+  function cellEvents(arr){
+    if(!arr || !arr.length) return '';
+    var st = _state();
+    return arr.map(function(m){
+      var status = _status(m.iso, m.done);
+      var cls = 'cal-event resp-'+m.resp+' status-'+status + (m.type==='phase'?' is-phase':'');
+      return '<div class="'+cls+'" title="'+escapeHtml(m.title)+'">'+escapeHtml(m.title)+'</div>';
+    }).join('');
+  }
+
+  window.agdNav = function(delta){
+    agdCurrent.m += delta;
+    if(agdCurrent.m<0){agdCurrent.m=11;agdCurrent.y--;}
+    if(agdCurrent.m>11){agdCurrent.m=0;agdCurrent.y++;}
+    renderCalendar();
+  };
+  window.agdGoToday = function(){
+    var d = new Date();
+    agdCurrent.y = d.getFullYear(); agdCurrent.m = d.getMonth();
+    renderCalendar();
+  };
+  window.renderAgenda = function(){ renderTimeline(); renderCalendar(); };
+})();
+</script>
+
+<script>
 /* ── Toggle de seções colapsáveis (Linha do Tempo / Execução em Paralelo) ── */
 window.toggleSection = function(id, force){
   var sec = document.querySelector('.section.collapsible[data-collapse-id="'+id+'"]');
@@ -2588,6 +2813,40 @@ window.setRespFilter = function(rf){
   if(window.__neonFluxoSendChecks) window.__neonFluxoSendChecks();
 };
 </script>
+
+<!-- ABA AGENDA (timeline + calendário) -->
+<section id="sec-agenda">
+  <button class="close-fluxo" onclick="setView(document.body.classList.contains('internal-on')?'interna':'cliente')">✕ Voltar</button>
+  <div class="agenda-wrap">
+    <div class="agenda-head">
+      <div>
+        <span class="tag">Agenda</span>
+        <h2>Tudo que tem data, em um só lugar.</h2>
+        <p class="agenda-sub">Marcos das tarefas e fases, com cor por responsável. Cinza = sem data. Vermelho = atrasado. Amarelo = vence em até 7 dias. Verde = concluído.</p>
+      </div>
+      <div class="agenda-legend">
+        <span class="leg-dot" style="background:#004658"></span>Vinicius
+        <span class="leg-dot" style="background:#4C808B"></span>Gabriel
+        <span class="leg-dot" style="background:#BCCCCE"></span>Os dois
+        <span class="leg-dot" style="background:#9b2828;margin-left:14px"></span>Atrasado
+        <span class="leg-dot" style="background:#b58210"></span>Próximo
+        <span class="leg-dot" style="background:#1a6e44"></span>Concluído
+      </div>
+    </div>
+    <h3 class="agenda-section-title">Linha do tempo — marcos por responsável</h3>
+    <div id="agenda-timeline-empty" class="agenda-empty" style="display:none">Nenhuma data ainda. Defina datas de entrega nas etapas e nas fases pra ver os marcos aqui.</div>
+    <div id="agenda-timeline" class="agenda-timeline"></div>
+
+    <h3 class="agenda-section-title">Calendário mensal</h3>
+    <div class="agenda-cal-nav">
+      <button id="agdPrev" onclick="agdNav(-1)">◀</button>
+      <span id="agdMonth"></span>
+      <button id="agdNext" onclick="agdNav(1)">▶</button>
+      <button id="agdToday" onclick="agdGoToday()" style="margin-left:14px">Hoje</button>
+    </div>
+    <div id="agenda-calendar" class="agenda-calendar"></div>
+  </div>
+</section>
 
 <!-- ABA FLUXO (mapa de dependências) -->
 <section id="sec-fluxo">
