@@ -14,12 +14,103 @@
     --f0:#004658; --f1:#235F6B; --f2:#4C808B; --f3:#7CA0A6; --f4:#BCCCCE;
     /* Cores fixas por responsável (distintas entre si) */
     --resp-v:#004658; --resp-g:#c66a30; --resp-d:#7CA0A6;
+    /* Design tokens — UX overhaul */
+    --sh-1:0 1px 2px rgba(0,70,88,.06);
+    --sh-2:0 2px 5px rgba(0,70,88,.10);
+    --sh-3:0 6px 14px rgba(0,70,88,.16);
+    --sh-4:0 12px 28px rgba(0,70,88,.22);
+    --r-sm:6px; --r-md:8px; --r-lg:11px;
+    --t-base:15px; --t-sm:13px; --t-xs:11.5px; --t-mini:10px;
+    --t-h1:32px; --t-h2:22px; --t-h3:17.5px;
+    --t-card-title:15.5px; --t-card-code:12.5px;
+    --space-1:6px; --space-2:10px; --space-3:14px; --space-4:18px; --space-5:24px;
     --display:'Lora',Georgia,'Times New Roman',serif;
     --body:'Lato',-apple-system,BlinkMacSystemFont,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{font-family:var(--body);color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+  body{font-family:var(--body);color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;font-size:var(--t-base)}
+  /* ========== UX OVERHAUL — fontes, sombras, espaçamento, botões ========== */
+  .task{padding:14px 12px 14px 14px;gap:14px;border-bottom:1px solid var(--line-soft);transition:background .15s}
+  .task:hover{background:var(--soft)}
+  .task .code{font-size:var(--t-card-code);padding:3px 9px;letter-spacing:.04em;font-weight:800}
+  .task .txt{font-size:var(--t-card-title);line-height:1.45;font-weight:500;color:var(--ink)}
+  .task .lbl{gap:10px}
+  .task .dep{font-size:11.5px;padding:4px 10px;font-weight:700}
+  .task .box{width:21px;height:21px;border-width:2px}
+  .task .box svg{width:13px;height:13px}
+  /* Custom task — ajustes pra parear com nativas */
+  .custom-task-item{padding:14px 16px;border-radius:var(--r-md);border-width:1.5px;box-shadow:var(--sh-1)}
+  .custom-task-item .ct-hd{gap:12px;margin-bottom:8px}
+  .custom-task-item .ct-code{font-size:var(--t-card-code);padding:3px 9px;font-weight:800;letter-spacing:.04em}
+  .custom-task-item .ct-title{font-size:var(--t-card-title);line-height:1.4;font-weight:600}
+  .custom-task-item .ct-box{width:21px;height:21px}
+  .custom-task-item .ct-box svg{width:13px;height:13px}
+  /* Status group — botões maiores e com hover */
+  .status{border-radius:var(--r-md);box-shadow:var(--sh-1);overflow:hidden}
+  .status button{font-size:11.5px;padding:8px 14px;letter-spacing:.04em;transition:all .12s}
+  .status button:hover:not(.on){background:var(--soft);color:var(--navy)}
+  /* Resp group */
+  .resp{border-radius:var(--r-md);box-shadow:var(--sh-1)}
+  .resp .rlab{font-size:9.5px;padding:0 12px}
+  .resp button{font-size:11.5px;padding:8px 14px;transition:all .12s}
+  .resp button:hover:not(.on){background:var(--soft);color:var(--navy)}
+  /* Botões da intbar/utility */
+  .ib{font-family:var(--body);font-size:12px;font-weight:700;padding:8px 16px;border-radius:var(--r-md);border:1px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;letter-spacing:.02em;transition:all .15s;box-shadow:var(--sh-1)}
+  .ib:hover{background:var(--navy);color:#fff;transform:translateY(-1px);box-shadow:var(--sh-2)}
+  .ib:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  /* Botões do topbar (viewtoggle) — maiores e com mais peso */
+  .viewtoggle{border-radius:var(--r-md);box-shadow:var(--sh-1)}
+  .viewtoggle button{font-size:13px;padding:11px 20px;letter-spacing:.03em;transition:all .14s}
+  .viewtoggle button:hover:not(.active){background:var(--soft);color:var(--navy)}
+  .viewtoggle button:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  /* Inputs e selects do modal — UX limpa */
+  .modal-field input[type="text"], .modal-field textarea, .modal-field select{
+    font-size:14px;padding:10px 12px;border-radius:var(--r-md);border:1.5px solid var(--line);
+    transition:border-color .12s, box-shadow .12s;font-family:var(--body)
+  }
+  .modal-field input:focus, .modal-field textarea:focus, .modal-field select:focus{
+    outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,70,88,.12)
+  }
+  .modal-field label{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--navy);margin-bottom:6px;display:block}
+  .modal-btn{font-size:14px;padding:11px 22px;border-radius:var(--r-md);font-weight:700;letter-spacing:.02em;transition:all .14s;cursor:pointer;border:none}
+  .modal-btn.primary{background:var(--navy);color:#fff;box-shadow:var(--sh-2)}
+  .modal-btn.primary:hover{background:#003040;transform:translateY(-1px);box-shadow:var(--sh-3)}
+  .modal-btn.secondary{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+  .modal-btn.secondary:hover{border-color:var(--navy);background:var(--soft)}
+  /* Due chip — mais visível */
+  .due-chip{font-size:11px;padding:3px 10px;font-weight:800;letter-spacing:.03em;box-shadow:var(--sh-1)}
+  /* Phase due — chip do header da fase mais robusto */
+  .phase-due{font-size:12px;padding:7px 14px;letter-spacing:.03em;box-shadow:var(--sh-1)}
+  /* Custom-task-section: espaçamento maior */
+  .custom-task-section{margin-top:8px}
+  /* Add task button — visual mais convidativo */
+  .add-task-btn{font-size:12px;padding:11px 18px;border-radius:var(--r-md);border-width:1.5px;transition:all .15s}
+  .add-task-btn:hover{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important;transform:translateY(-1px);box-shadow:var(--sh-2)}
+  /* Headers gerais de seção mais legíveis */
+  .head h2{font-size:var(--t-h2)}
+  .ph-title h3{font-size:var(--t-h3);margin-top:2px}
+  .obj{font-size:13.5px;line-height:1.6}
+  /* Foco acessível em todos os inputs */
+  input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--navy);outline-offset:2px
+  }
+  /* ========== DRAG HANDLE UNIVERSAL ========== */
+  .task-drag-handle{display:none;align-items:center;justify-content:center;width:26px;height:26px;color:var(--gray);cursor:grab;border-radius:6px;transition:all .14s;flex-shrink:0;user-select:none;opacity:.55}
+  body.internal-on .task-drag-handle{display:inline-flex}
+  .task-drag-handle:hover{background:var(--soft);color:var(--navy);opacity:1}
+  .task-drag-handle:active{cursor:grabbing}
+  .task-drag-handle svg{pointer-events:none}
+  /* Visual states durante drag */
+  label.task.task-dragging,
+  .custom-task-section.task-dragging{opacity:.35;transition:opacity .12s}
+  label.task.task-drop-before{box-shadow:0 -3px 0 var(--navy) inset, 0 -3px 0 var(--navy)}
+  label.task.task-drop-after{box-shadow:0 3px 0 var(--navy) inset, 0 3px 0 var(--navy)}
+  .custom-task-section.task-drop-before > .custom-task-item{box-shadow:0 -3px 0 var(--navy), var(--sh-1)}
+  .custom-task-section.task-drop-after > .custom-task-item{box-shadow:0 3px 0 var(--navy), var(--sh-1)}
+  /* Esconde setinhas antigas (.reorder) e setinhas do canto direito da task */
+  body.internal-on .task .reorder{display:none !important}
+  .task .reorder{display:none !important}
   .wrap{max-width:1080px;margin:0 auto;padding:0 40px}
   h1,h2,h3,h4{font-family:var(--display);color:var(--navy);font-weight:700;letter-spacing:-.01em}
   .tag{display:inline-block;background:var(--navy);color:#fff;font-family:var(--body);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:6px 13px;border-radius:3px}
@@ -2300,7 +2391,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
             +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
-            +'<span class="ct-drag-handle interno" title="Arraste pra reordenar" draggable="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
+            +'<span class="task-drag-handle interno" title="Arraste pra reordenar"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
             +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
           +'</div>'
@@ -2332,40 +2423,10 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       if(editBtn) editBtn.addEventListener('click',function(){
         window.openModal(task.phase, task.id);
       });
-      // Drag-and-drop pra reordenar (a partir do handle ⋮⋮)
-      var dragHandle = wrap.querySelector('.ct-drag-handle');
-      if(dragHandle){
-        // Inicia drag a partir do handle; o item arrastado é o .custom-task-section
-        dragHandle.addEventListener('dragstart', function(e){
-          wrap.classList.add('ct-dragging');
-          e.dataTransfer.setData('text/ct-id', task.id);
-          e.dataTransfer.effectAllowed = 'move';
-          // Imagem de drag: o próprio card
-          try{ e.dataTransfer.setDragImage(wrap, 20, 20); }catch(err){}
-        });
-        dragHandle.addEventListener('dragend', function(){
-          wrap.classList.remove('ct-dragging');
-          [].slice.call(document.querySelectorAll('.custom-task-section.ct-drag-over')).forEach(function(el){
-            el.classList.remove('ct-drag-over');
-          });
-        });
-      }
-      // O alvo (drop target) é o próprio wrap
-      wrap.addEventListener('dragover', function(e){
-        // Só aceita se for de uma custom task
-        if(![].slice.call(e.dataTransfer.types).some(function(t){return t==='text/ct-id';})) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        wrap.classList.add('ct-drag-over');
-      });
-      wrap.addEventListener('dragleave', function(){ wrap.classList.remove('ct-drag-over'); });
-      wrap.addEventListener('drop', function(e){
-        e.preventDefault();
-        wrap.classList.remove('ct-drag-over');
-        var srcId = e.dataTransfer.getData('text/ct-id');
-        if(!srcId || srcId === task.id) return;
-        moveCustomTaskTo(srcId, task.id);
-      });
+      // Drag-and-drop é gerenciado pelo Universal DnD Manager (window.__neonDnD)
+      wrap.setAttribute('data-task-id', task.id);
+      wrap.setAttribute('data-task-kind', 'custom');
+      if(window.__neonDnD) window.__neonDnD.bind(wrap);
       var delBtn=wrap.querySelector('.ct-del');
       delBtn.setAttribute('data-ctid',task.id);
       delBtn.addEventListener('click',function(){
@@ -2409,6 +2470,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     if(window.refreshStatusResp) window.refreshStatusResp();
     if(window.renderAllDueChips) window.renderAllDueChips();
   }
+  window.renderCustomTasks = renderCustomTasks;
 
   /* ---- modal ---- */
   var _phase=0;
@@ -2438,6 +2500,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     });
     saveState(s);
   }
+  window.recomputeCustomCodes = recomputeCustomCodes;
   // Move uma custom task dentro do array (apenas entre tasks da mesma fase).
   window.moveCustomTask = function(taskId, dir){
     var s = loadState();
@@ -2718,6 +2781,170 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
 
   var obs=new MutationObserver(function(){
     if(document.body.classList.contains('internal-on')) setTimeout(function(){injectControls();updateDisabled();},120);
+  });
+  if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<script>
+/* ── UNIVERSAL DRAG-AND-DROP MANAGER ─────────────────────────────────
+   Reordena tasks nativas (label.task + .taskint juntos) e custom tasks
+   (.custom-task-section). Inicia drag a partir do handle ⋮⋮. */
+(function(){
+  if(window.__neonDnD) return;
+  var KEY='projeto_neon_lpncc';
+  var HANDLE_SVG='<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>';
+  var dragging=null; // referência ao elemento sendo arrastado
+  var dragKind=null; // 'native' | 'custom'
+  var dragId=null;   // id da task
+
+  function _state(){ try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};} }
+  function _save(s){ try{localStorage.setItem(KEY, JSON.stringify(s));}catch(e){} }
+
+  function injectNativeHandles(){
+    [].slice.call(document.querySelectorAll('label.task')).forEach(function(lbl){
+      if(lbl.querySelector('.task-drag-handle')) return;
+      var inp = lbl.querySelector('input[type=checkbox]');
+      if(!inp || !inp.id) return;
+      var handle = document.createElement('span');
+      handle.className = 'task-drag-handle interno';
+      handle.setAttribute('title','Arraste pra reordenar');
+      handle.innerHTML = HANDLE_SVG;
+      // Insere antes do checkbox (visualmente à esquerda)
+      lbl.insertBefore(handle, lbl.firstChild);
+      lbl.setAttribute('data-task-id', inp.id);
+      lbl.setAttribute('data-task-kind', 'native');
+      bindEl(lbl);
+    });
+  }
+
+  // Calcula se o drop deve ser ANTES ou DEPOIS do alvo, baseado na posição Y do mouse
+  function dropPosition(targetEl, clientY){
+    var rect = targetEl.getBoundingClientRect();
+    return (clientY - rect.top) < (rect.height/2) ? 'before' : 'after';
+  }
+  function clearDropMarkers(){
+    [].slice.call(document.querySelectorAll('.task-drop-before, .task-drop-after')).forEach(function(el){
+      el.classList.remove('task-drop-before','task-drop-after');
+    });
+  }
+
+  function bindEl(el){
+    if(el._dndBound) return;
+    el._dndBound = true;
+    var kind = el.getAttribute('data-task-kind');
+    var id = el.getAttribute('data-task-id');
+    if(!kind || !id) return;
+    var handle = el.querySelector('.task-drag-handle');
+    if(handle){
+      handle.setAttribute('draggable','true');
+      handle.addEventListener('dragstart', function(e){
+        dragging = el;
+        dragKind = kind;
+        dragId = id;
+        el.classList.add('task-dragging');
+        try{ e.dataTransfer.setData('text/plain', kind+':'+id); }catch(err){}
+        e.dataTransfer.effectAllowed = 'move';
+        // Imagem de drag: o card inteiro (não o handle pequeno)
+        try{ e.dataTransfer.setDragImage(el, 30, 20); }catch(err){}
+        // Stop propagation pra não disparar drag em pais
+        e.stopPropagation();
+      });
+      handle.addEventListener('dragend', function(){
+        el.classList.remove('task-dragging');
+        clearDropMarkers();
+        dragging = null; dragKind = null; dragId = null;
+      });
+    }
+    // Drop zone: o card inteiro aceita drop
+    el.addEventListener('dragover', function(e){
+      if(!dragging || dragKind !== kind || el === dragging) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var pos = dropPosition(el, e.clientY);
+      clearDropMarkers();
+      el.classList.add(pos === 'before' ? 'task-drop-before' : 'task-drop-after');
+    });
+    el.addEventListener('dragleave', function(){ el.classList.remove('task-drop-before','task-drop-after'); });
+    el.addEventListener('drop', function(e){
+      if(!dragging || dragKind !== kind || el === dragging) return;
+      e.preventDefault();
+      var pos = dropPosition(el, e.clientY);
+      clearDropMarkers();
+      var srcId = dragId;
+      var tgtId = id;
+      if(kind === 'native') reorderNative(srcId, tgtId, pos);
+      else reorderCustom(srcId, tgtId, pos);
+    });
+  }
+
+  // Reordena tasks NATIVAS: move o label + a .taskint sibling juntos.
+  function reorderNative(srcId, tgtId, pos){
+    var srcLbl = document.querySelector('label.task[data-task-id="'+srcId+'"]');
+    var tgtLbl = document.querySelector('label.task[data-task-id="'+tgtId+'"]');
+    if(!srcLbl || !tgtLbl) return;
+    // Só dentro da mesma .tasks (mesma fase)
+    if(srcLbl.parentNode !== tgtLbl.parentNode) return;
+    var srcTi = srcLbl.nextElementSibling && srcLbl.nextElementSibling.classList.contains('taskint') ? srcLbl.nextElementSibling : null;
+    var tgtTi = tgtLbl.nextElementSibling && tgtLbl.nextElementSibling.classList.contains('taskint') ? tgtLbl.nextElementSibling : null;
+    var parent = tgtLbl.parentNode;
+    if(pos === 'before'){
+      parent.insertBefore(srcLbl, tgtLbl);
+      if(srcTi) parent.insertBefore(srcTi, tgtLbl);
+    } else {
+      var afterAnchor = tgtTi ? tgtTi.nextSibling : tgtLbl.nextSibling;
+      parent.insertBefore(srcLbl, afterAnchor);
+      if(srcTi) parent.insertBefore(srcTi, afterAnchor);
+    }
+    // Persiste a nova ordem das nativas no state.order
+    saveNativeOrder(parent);
+    if(window.renderAllDueChips) window.renderAllDueChips();
+  }
+  function saveNativeOrder(tasksEl){
+    var s = _state();
+    if(!s.order) s.order = {};
+    var ids = [].slice.call(tasksEl.querySelectorAll(':scope > label.task')).map(function(l){return l.getAttribute('data-task-id');}).filter(Boolean);
+    // Identifica a fase pelo data-phase do primeiro checkbox
+    var firstCb = tasksEl.querySelector('input[type=checkbox][data-phase]');
+    if(!firstCb) return;
+    var phase = firstCb.getAttribute('data-phase');
+    s.order[phase] = ids;
+    _save(s);
+  }
+
+  // Reordena custom tasks: move no array state.custom_tasks
+  function reorderCustom(srcId, tgtId, pos){
+    var s = _state();
+    var arr = s.custom_tasks || [];
+    var srcIdx = arr.findIndex(function(t){return t.id===srcId;});
+    var tgtIdx = arr.findIndex(function(t){return t.id===tgtId;});
+    if(srcIdx<0 || tgtIdx<0) return;
+    var moved = arr.splice(srcIdx,1)[0];
+    // Se mudou de fase, herda a fase do alvo
+    moved.phase = arr[tgtIdx > srcIdx ? tgtIdx-1 : tgtIdx].phase;
+    var newTgtIdx = arr.findIndex(function(t){return t.id===tgtId;});
+    var insertAt = pos === 'before' ? newTgtIdx : newTgtIdx + 1;
+    arr.splice(insertAt, 0, moved);
+    _save(s);
+    if(window.recomputeCustomCodes) window.recomputeCustomCodes();
+    if(window.renderCustomTasks) window.renderCustomTasks();
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
+  }
+
+  window.__neonDnD = {
+    bind: bindEl,
+    injectNativeHandles: injectNativeHandles
+  };
+
+  // Injeta handles nas nativas após o boot
+  function init(){
+    injectNativeHandles();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){setTimeout(init,300);});
+  else setTimeout(init, 300);
+  // E também quando entra na interna (caso elementos novos)
+  var obs = new MutationObserver(function(){
+    if(document.body.classList.contains('internal-on')) setTimeout(injectNativeHandles, 100);
   });
   if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
