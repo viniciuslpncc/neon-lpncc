@@ -2683,6 +2683,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       });
     });
   }
+  window.__neonRenumber = renumber;
 
   function saveOrder(){
     var s=loadS(); s.order={};
@@ -2898,6 +2899,11 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     }
     // Persiste a nova ordem das nativas no state.order
     saveNativeOrder(parent);
+    // Renumera os códigos visíveis (0.1, 0.2, 0.3...) baseado na nova ordem
+    if(window.__neonRenumber) window.__neonRenumber();
+    // Renumera também os códigos das custom tasks (que dependem do max_nativo)
+    if(window.recomputeCustomCodes) window.recomputeCustomCodes();
+    if(window.renderCustomTasks) window.renderCustomTasks();
     if(window.renderAllDueChips) window.renderAllDueChips();
   }
   function saveNativeOrder(tasksEl){
