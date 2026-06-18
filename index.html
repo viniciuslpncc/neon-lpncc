@@ -95,12 +95,52 @@
   input:focus-visible, textarea:focus-visible, select:focus-visible{
     outline:2px solid var(--navy);outline-offset:2px
   }
-  /* ========== DRAG HANDLE UNIVERSAL ========== */
-  .task-drag-handle{display:none;align-items:center;justify-content:center;width:26px;height:26px;color:var(--gray);cursor:grab;border-radius:6px;transition:all .14s;flex-shrink:0;user-select:none;opacity:.55}
+  /* ========== MODAL DE ETAPA — modal maior e mais respirável ========== */
+  .modal-card{max-width:760px !important;width:96vw;max-height:90vh;overflow-y:auto;border-radius:12px;padding:28px 32px}
+  .modal-card h3{font-family:var(--display);color:var(--navy);font-size:22px;font-weight:700;margin-bottom:6px}
+  .modal-field{margin-bottom:18px}
+  /* ========== PICKER DE DEPENDÊNCIAS ========== */
+  .deps-field label{display:flex !important;align-items:center;justify-content:space-between;font-size:12.5px !important;font-weight:700 !important;color:var(--navy) !important;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px !important}
+  .deps-count{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--gray);background:var(--soft);padding:3px 10px;border-radius:11px;border:1px solid var(--line)}
+  .deps-count.has-selection{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .deps-help{font-size:12px;color:var(--gray);margin-bottom:10px;line-height:1.4}
+  .deps-toolbar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+  .deps-search{flex:1;font-family:var(--body);font-size:13px;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r-md);background:#fff;transition:border-color .12s,box-shadow .12s}
+  .deps-search:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,70,88,.12)}
+  .deps-clear{font-family:var(--body);font-size:11.5px;font-weight:700;padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);background:#fff;color:var(--gray);cursor:pointer;letter-spacing:.04em;transition:all .12s}
+  .deps-clear:hover{background:var(--soft);color:var(--navy);border-color:var(--navy)}
+  .deps-picker{border:1.5px solid var(--line);border-radius:10px;padding:8px;max-height:280px;overflow-y:auto;background:var(--soft)}
+  .deps-phase-group{margin-bottom:10px}
+  .deps-phase-group:last-child{margin-bottom:0}
+  .deps-phase-header{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--navy);padding:6px 8px 4px;display:flex;align-items:center;gap:8px}
+  .deps-phase-header::after{content:'';flex:1;height:1px;background:var(--line)}
+  .deps-chips{display:flex;flex-wrap:wrap;gap:6px;padding:2px 4px}
+  .deps-chip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--ink);cursor:pointer;transition:all .12s;font-family:var(--body);max-width:100%;line-height:1.2;text-align:left;font-weight:500}
+  .deps-chip:hover{border-color:var(--navy);background:#fff;transform:translateY(-1px);box-shadow:var(--sh-2)}
+  .deps-chip:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .deps-chip .chip-code{font-family:var(--display);font-weight:700;color:var(--navy);font-size:13px;letter-spacing:.02em;flex-shrink:0;background:rgba(0,70,88,.06);padding:2px 7px;border-radius:5px;line-height:1.4}
+  .deps-chip .chip-text{font-size:12px;color:var(--ink)}
+  .deps-chip.is-selected{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:var(--sh-2)}
+  .deps-chip.is-selected .chip-code{background:rgba(255,255,255,.18);color:#fff}
+  .deps-chip.is-selected .chip-text{color:#fff;font-weight:600}
+  .deps-chip.is-selected::after{content:'✓';margin-left:4px;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.2);width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+  .deps-chip.is-hidden{display:none}
+  .deps-empty{font-size:12px;color:var(--gray);text-align:center;padding:20px;font-style:italic}
+  /* ========== DRAG HANDLE UNIVERSAL — UX refinado ========== */
+  .task-drag-handle{display:none;align-items:center;justify-content:center;width:32px;height:36px;color:var(--navy);cursor:grab;border-radius:6px;transition:all .12s;flex-shrink:0;user-select:none;opacity:.45;position:relative;background:transparent}
   body.internal-on .task-drag-handle{display:inline-flex}
-  .task-drag-handle:hover{background:var(--soft);color:var(--navy);opacity:1}
-  .task-drag-handle:active{cursor:grabbing}
-  .task-drag-handle svg{pointer-events:none}
+  .task-drag-handle::before{content:'';position:absolute;inset:-4px;border-radius:8px;background:transparent;transition:background .12s}
+  .task-drag-handle:hover{opacity:1;color:var(--navy)}
+  .task-drag-handle:hover::before{background:rgba(0,70,88,.08)}
+  .task-drag-handle:active, .task-drag-handle[draggable="true"]:active{cursor:grabbing}
+  .task-drag-handle:active::before{background:rgba(0,70,88,.18)}
+  .task-drag-handle svg{pointer-events:none;width:16px;height:16px;position:relative;z-index:1}
+  /* Quando o cursor passa em qualquer parte do card, o handle fica mais visível */
+  label.task:hover .task-drag-handle,
+  .custom-task-item:hover .task-drag-handle{opacity:.85}
+  /* Custom task: handle sempre alinhado à direita do header pra ficar fácil de pegar */
+  .custom-task-item .ct-hd{position:relative}
+  .custom-task-item .task-drag-handle{order:99;margin-left:auto}
   /* Visual states durante drag */
   label.task.task-dragging,
   .custom-task-section.task-dragging{opacity:.35;transition:opacity .12s}
@@ -560,8 +600,12 @@
   body.internal-on .tasks > label.task{margin-top:6px}
   /* Esconde "O Norte" só na visão interna (polui durante operação) */
   body.internal-on .mission{display:none}
-  /* Esconde "O que não dá pra forçar · sequência obrigatória" na visão interna */
-  body.internal-on .locks{display:none}
+  /* Esconde "O que não dá pra forçar · sequência obrigatória" — GLOBAL (interna e cliente) */
+  .locks{display:none !important}
+  /* Esconde "Linha do Tempo" SÓ na visão interna (cliente continua vendo); agenda já tem essa info */
+  body.internal-on [data-collapse-id="timeline"]{display:none}
+  /* Esconde "Execução em Paralelo" — GLOBAL */
+  [data-collapse-id="parallel"]{display:none !important}
   /* Seções colapsáveis (Linha do Tempo / Execução em Paralelo) */
   .section.collapsible .head{cursor:pointer;position:relative}
   .section.collapsible .head::after{content:'▼';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:12px;color:var(--gray);transition:transform .2s}
@@ -2190,8 +2234,26 @@
     <div class="modal-field"><label>O quê</label><textarea id="newTaskOque" placeholder="O que é esta etapa?"></textarea></div>
     <div class="modal-field"><label>Pra quê</label><textarea id="newTaskPraque" placeholder="Qual o objetivo desta etapa?"></textarea></div>
     <div class="modal-field"><label>Como</label><textarea id="newTaskComo" placeholder="Como será executada?"></textarea></div>
-    <div class="modal-field"><label>Depende de <span style="color:var(--gray);font-weight:400">(segura Cmd/Ctrl pra escolher vários)</span></label><select id="newTaskDepends" multiple size="6" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:6px;font-size:12px;font-family:inherit"></select></div>
-    <div class="modal-field"><label>Destrava <span style="color:var(--gray);font-weight:400">(o que esta etapa libera)</span></label><select id="newTaskUnlocks" multiple size="6" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:6px;font-size:12px;font-family:inherit"></select></div>
+    <div class="modal-field deps-field">
+      <label>Depende de <span class="deps-count" data-count-for="depends">0 selecionadas</span></label>
+      <p class="deps-help">Clique nos cards das etapas que precisam estar prontas antes desta.</p>
+      <div class="deps-toolbar">
+        <input type="text" class="deps-search" placeholder="🔍 Buscar etapa…" data-search-for="depends">
+        <button type="button" class="deps-clear" data-clear-for="depends">Limpar</button>
+      </div>
+      <div class="deps-picker" data-picker="depends"></div>
+      <input type="hidden" id="newTaskDependsValue">
+    </div>
+    <div class="modal-field deps-field">
+      <label>Destrava <span class="deps-count" data-count-for="unlocks">0 selecionadas</span></label>
+      <p class="deps-help">Clique nas etapas que esta libera quando concluir.</p>
+      <div class="deps-toolbar">
+        <input type="text" class="deps-search" placeholder="🔍 Buscar etapa…" data-search-for="unlocks">
+        <button type="button" class="deps-clear" data-clear-for="unlocks">Limpar</button>
+      </div>
+      <div class="deps-picker" data-picker="unlocks"></div>
+      <input type="hidden" id="newTaskUnlocksValue">
+    </div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeAddTaskModal()">Cancelar</button>
       <button class="modal-btn primary" id="addTaskModalConfirm" onclick="confirmAddTask()">Adicionar</button>
@@ -2538,26 +2600,96 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     if(window.refreshNeonProgress) window.refreshNeonProgress();
   };
 
-  function populateSelect(selEl, selected){
-    selEl.innerHTML='';
-    selected = selected || [];
+  /* ── PICKER DE DEPENDÊNCIAS — UI moderna com chips clicáveis ── */
+  var _pickerState = { depends: new Set(), unlocks: new Set() };
+  // Parser pra extrair código + nome curto do label do NEON_FLUXO_NODES
+  function _splitLabel(label){
+    // ex: "0.1 — Diagnóstico" → code="0.1", text="Diagnóstico"
+    // ex: "Cadastro & Produto (0.2, 0.3)" → code="0.2/0.3", text="Cadastro & Produto"
+    var emDash = label.match(/^([\d\.A-Z]+)\s*—\s*(.+)$/);
+    if(emDash) return { code: emDash[1], text: emDash[2] };
+    var paren = label.match(/^(.+?)\s*\(([\d\.,\s]+)\)\s*$/);
+    if(paren) return { code: paren[2].replace(/\s/g,''), text: paren[1] };
+    return { code: '', text: label };
+  }
+  function renderDepsPicker(pickerType, selectedIds){
+    var picker = document.querySelector('.deps-picker[data-picker="'+pickerType+'"]');
+    if(!picker) return;
+    _pickerState[pickerType] = new Set(selectedIds || []);
     var nodes = (window.NEON_FLUXO_NODES||[]);
     var byPhase = {};
     nodes.forEach(function(n){ (byPhase[n.phase] = byPhase[n.phase]||[]).push(n); });
+    var html = '';
     Object.keys(byPhase).sort().forEach(function(ph){
-      var grp = document.createElement('optgroup');
-      grp.label = 'Fase '+ph;
+      html += '<div class="deps-phase-group" data-phase="'+ph+'">';
+      html += '<div class="deps-phase-header">Fase '+ph+'</div>';
+      html += '<div class="deps-chips">';
       byPhase[ph].forEach(function(n){
-        var o = document.createElement('option');
-        o.value = n.id; o.textContent = n.label;
-        if(selected.indexOf(n.id)!==-1) o.selected = true;
-        grp.appendChild(o);
+        var parts = _splitLabel(n.label);
+        var sel = _pickerState[pickerType].has(n.id);
+        html += '<button type="button" class="deps-chip'+(sel?' is-selected':'')+'" data-id="'+escapeHtmlAttr(n.id)+'" data-search="'+escapeHtmlAttr((parts.code+' '+parts.text).toLowerCase())+'">'
+          + '<span class="chip-code">'+escapeHtmlAttr(parts.code||n.id)+'</span>'
+          + '<span class="chip-text">'+escapeHtmlAttr(parts.text)+'</span>'
+          + '</button>';
       });
-      selEl.appendChild(grp);
+      html += '</div></div>';
+    });
+    picker.innerHTML = html;
+    updatePickerCount(pickerType);
+    // Wire-up dos chips
+    [].slice.call(picker.querySelectorAll('.deps-chip')).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-id');
+        if(_pickerState[pickerType].has(id)){
+          _pickerState[pickerType].delete(id);
+          btn.classList.remove('is-selected');
+        } else {
+          _pickerState[pickerType].add(id);
+          btn.classList.add('is-selected');
+        }
+        updatePickerCount(pickerType);
+      });
     });
   }
-  function getSelectedValues(selEl){
-    return [].slice.call(selEl.selectedOptions).map(function(o){return o.value;});
+  function escapeHtmlAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function updatePickerCount(pickerType){
+    var count = _pickerState[pickerType].size;
+    var lbl = document.querySelector('[data-count-for="'+pickerType+'"]');
+    if(lbl){
+      lbl.textContent = count === 0 ? 'nenhuma' : (count === 1 ? '1 selecionada' : count+' selecionadas');
+      lbl.classList.toggle('has-selection', count > 0);
+    }
+  }
+  function getPickedIds(pickerType){ return Array.from(_pickerState[pickerType]); }
+  // Wire-up busca e limpar
+  function bindDepsControls(){
+    [].slice.call(document.querySelectorAll('.deps-search')).forEach(function(input){
+      if(input._bound) return; input._bound = true;
+      input.addEventListener('input', function(){
+        var pickerType = input.getAttribute('data-search-for');
+        var picker = document.querySelector('.deps-picker[data-picker="'+pickerType+'"]');
+        var q = input.value.trim().toLowerCase();
+        [].slice.call(picker.querySelectorAll('.deps-chip')).forEach(function(chip){
+          var s = chip.getAttribute('data-search') || '';
+          chip.classList.toggle('is-hidden', q && s.indexOf(q) === -1);
+        });
+        // Esconde grupos de fase que ficaram totalmente vazios
+        [].slice.call(picker.querySelectorAll('.deps-phase-group')).forEach(function(grp){
+          var hasVisible = [].slice.call(grp.querySelectorAll('.deps-chip')).some(function(c){return !c.classList.contains('is-hidden');});
+          grp.style.display = hasVisible ? '' : 'none';
+        });
+      });
+    });
+    [].slice.call(document.querySelectorAll('.deps-clear')).forEach(function(btn){
+      if(btn._bound) return; btn._bound = true;
+      btn.addEventListener('click', function(){
+        var pickerType = btn.getAttribute('data-clear-for');
+        _pickerState[pickerType].clear();
+        var picker = document.querySelector('.deps-picker[data-picker="'+pickerType+'"]');
+        [].slice.call(picker.querySelectorAll('.deps-chip.is-selected')).forEach(function(c){c.classList.remove('is-selected');});
+        updatePickerCount(pickerType);
+      });
+    });
   }
 
   window.openModal=function(ph, taskId){
@@ -2576,8 +2708,11 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     document.getElementById('newTaskOque').value   = existing ? (existing.oque||'') : '';
     document.getElementById('newTaskPraque').value = existing ? (existing.praque||'') : '';
     document.getElementById('newTaskComo').value   = existing ? (existing.como||'') : '';
-    populateSelect(document.getElementById('newTaskDepends'), existing ? (existing.depends_on||[]) : []);
-    populateSelect(document.getElementById('newTaskUnlocks'), existing ? (existing.unlocks||[]) : []);
+    renderDepsPicker('depends', existing ? (existing.depends_on||[]) : []);
+    renderDepsPicker('unlocks', existing ? (existing.unlocks||[]) : []);
+    bindDepsControls();
+    // Limpa campos de busca
+    [].slice.call(document.querySelectorAll('.deps-search')).forEach(function(i){i.value='';});
     document.getElementById('addTaskModal').classList.add('show');
     setTimeout(function(){document.getElementById('newTaskTitle').focus();},80);
   };
@@ -2588,8 +2723,8 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   window.confirmAddTask=function(){
     var title=document.getElementById('newTaskTitle').value.trim();
     if(!title){alert('O t\u00edtulo \u00e9 obrigat\u00f3rio.');return;}
-    var depends = getSelectedValues(document.getElementById('newTaskDepends'));
-    var unlocks = getSelectedValues(document.getElementById('newTaskUnlocks'));
+    var depends = getPickedIds('depends');
+    var unlocks = getPickedIds('unlocks');
     var st=loadState(); if(!st.custom_tasks) st.custom_tasks=[];
     if(_editingId){
       // Modo editar: atualiza task existente preservando id/checks/c\u00f3digo (c\u00f3digo \u00e9 auto)
