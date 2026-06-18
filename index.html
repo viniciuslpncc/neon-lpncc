@@ -2879,29 +2879,49 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     });
   }
 
-  // Reordena tasks NATIVAS: move o label + a .taskint sibling juntos.
+  // Coleta o "bloco" de uma task nativa: o label + tudo até o próximo label.task,
+  // .custom-task-section ou .add-task-btn (qualquer coisa que delimite o próximo bloco).
+  function nativeBlock(lbl){
+    var arr = [lbl];
+    var n = lbl.nextSibling;
+    while(n){
+      if(n.nodeType === 1){
+        if(n.tagName === 'LABEL' && n.classList.contains('task')) break;
+        if(n.classList && (n.classList.contains('custom-task-section') || n.classList.contains('add-task-btn'))) break;
+      }
+      arr.push(n);
+      n = n.nextSibling;
+    }
+    return arr;
+  }
+  // Reordena tasks NATIVAS — move o bloco inteiro (label + taskint + qualquer
+  // sibling intermediário) preservando integridade do DOM.
   function reorderNative(srcId, tgtId, pos){
     var srcLbl = document.querySelector('label.task[data-task-id="'+srcId+'"]');
     var tgtLbl = document.querySelector('label.task[data-task-id="'+tgtId+'"]');
     if(!srcLbl || !tgtLbl) return;
-    // Só dentro da mesma .tasks (mesma fase)
     if(srcLbl.parentNode !== tgtLbl.parentNode) return;
-    var srcTi = srcLbl.nextElementSibling && srcLbl.nextElementSibling.classList.contains('taskint') ? srcLbl.nextElementSibling : null;
-    var tgtTi = tgtLbl.nextElementSibling && tgtLbl.nextElementSibling.classList.contains('taskint') ? tgtLbl.nextElementSibling : null;
     var parent = tgtLbl.parentNode;
+    var srcBlock = nativeBlock(srcLbl);
+    // Calcula refPoint: onde inserir
+    var refPoint;
     if(pos === 'before'){
-      parent.insertBefore(srcLbl, tgtLbl);
-      if(srcTi) parent.insertBefore(srcTi, tgtLbl);
+      refPoint = tgtLbl;
     } else {
-      var afterAnchor = tgtTi ? tgtTi.nextSibling : tgtLbl.nextSibling;
-      parent.insertBefore(srcLbl, afterAnchor);
-      if(srcTi) parent.insertBefore(srcTi, afterAnchor);
+      // Pula o bloco do alvo
+      var tgtBlock = nativeBlock(tgtLbl);
+      refPoint = tgtBlock[tgtBlock.length - 1].nextSibling;
     }
+    // Verifica se refPoint está dentro do srcBlock (loop infinito) — proteção
+    if(srcBlock.indexOf(refPoint) >= 0) return;
+    // Move todos os elementos do bloco src pra antes de refPoint (ou no fim se null)
+    srcBlock.forEach(function(el){
+      if(refPoint) parent.insertBefore(el, refPoint);
+      else parent.appendChild(el);
+    });
     // Persiste a nova ordem das nativas no state.order
     saveNativeOrder(parent);
-    // Renumera os códigos visíveis (0.1, 0.2, 0.3...) baseado na nova ordem
     if(window.__neonRenumber) window.__neonRenumber();
-    // Renumera também os códigos das custom tasks (que dependem do max_nativo)
     if(window.recomputeCustomCodes) window.recomputeCustomCodes();
     if(window.renderCustomTasks) window.renderCustomTasks();
     if(window.renderAllDueChips) window.renderAllDueChips();
