@@ -138,9 +138,8 @@
   /* Quando o cursor passa em qualquer parte do card, o handle fica mais visível */
   label.task:hover .task-drag-handle,
   .custom-task-item:hover .task-drag-handle{opacity:.85}
-  /* Custom task: handle sempre alinhado à direita do header pra ficar fácil de pegar */
+  /* Custom task: handle à ESQUERDA, mesma posição das nativas pra consistência */
   .custom-task-item .ct-hd{position:relative}
-  .custom-task-item .task-drag-handle{order:99;margin-left:auto}
   /* Visual states durante drag */
   label.task.task-dragging,
   .custom-task-section.task-dragging{opacity:.35;transition:opacity .12s}
@@ -2447,13 +2446,13 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       wrap.innerHTML=
         '<div class="custom-task-item">'
           +'<div class="ct-hd">'
+            +'<span class="task-drag-handle interno" title="Arraste pra reordenar"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
             +'<label class="ct-check" title="Marcar como conclu\u00edda">'
               +'<input type="checkbox" data-phase="'+task.phase+'" id="'+esc(task.id)+'">'
               +'<span class="ct-box"><svg viewBox="0 0 12 12"><path d="M1 6L4.5 9.5L11 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
             +'</label>'
             +'<span class="ct-code">'+esc(task.code)+'</span>'
             +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
-            +'<span class="task-drag-handle interno" title="Arraste pra reordenar"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
             +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
             +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
           +'</div>'
