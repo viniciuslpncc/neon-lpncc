@@ -95,6 +95,35 @@
   input:focus-visible, textarea:focus-visible, select:focus-visible{
     outline:2px solid var(--navy);outline-offset:2px
   }
+  /* ===== Tag de dependência editável ===== */
+  body.internal-on .dep.dep-editable{cursor:pointer;border-radius:6px;padding:4px 10px;transition:background .12s,box-shadow .12s}
+  body.internal-on .dep.dep-editable:hover{background:rgba(0,70,88,.07);box-shadow:inset 0 0 0 1px var(--line)}
+  body.internal-on .dep.dep-editable::after{content:'✎';margin-left:6px;font-size:9px;opacity:.4}
+  .dep-editor{position:absolute;z-index:120;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-4);padding:14px;width:268px;font-family:var(--body)}
+  .dep-editor-title{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:10px}
+  .dep-opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--ink);cursor:pointer;margin-bottom:6px;font-family:var(--body);font-weight:500;transition:all .12s}
+  .dep-opt:hover{border-color:var(--navy);background:var(--soft)}
+  .dep-opt.on{border-color:var(--navy);background:var(--navy);color:#fff;font-weight:700}
+  .dep-opt-dot{width:9px;height:9px;border-radius:50%;background:var(--sage);flex-shrink:0}
+  .dep-opt-dot.seq{background:var(--navy)}
+  .dep-opt-dot.gate{background:#b58210}
+  .dep-opt.on .dep-opt-dot{background:#fff}
+  .dep-seq-row{margin:8px 0 4px}
+  .dep-seq-row label{display:block;font-size:10.5px;color:var(--gray);font-weight:700;margin-bottom:4px;letter-spacing:.02em}
+  .dep-seq-row input{width:100%;font-family:var(--body);font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:7px}
+  .dep-seq-row input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,70,88,.12)}
+  .dep-editor-actions{display:flex;justify-content:flex-end;margin-top:8px}
+  .dep-save{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--body);transition:all .12s}
+  .dep-save:hover{background:#003040;transform:translateY(-1px);box-shadow:var(--sh-2)}
+  /* ===== Linha de vínculos do fluxo na taskint ===== */
+  .ct-fluxo-row{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);flex-wrap:wrap}
+  body.internal-on .ct-fluxo-row{display:flex}
+  .ct-fluxo-summary{font-size:12px;color:var(--navy);line-height:1.5}
+  .ct-fluxo-summary .muted{color:var(--gray);font-style:italic}
+  .ct-fluxo-btn{background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--navy);cursor:pointer;font-family:var(--body);transition:all .12s;white-space:nowrap}
+  .ct-fluxo-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+  /* Modal em modo "só vínculos": esconde campos de título/detalhes */
+  #addTaskModal[data-links-only] .modal-field:not(.deps-field){display:none}
   /* ========== MODAL DE ETAPA — modal maior e mais respirável ========== */
   .modal-card{max-width:760px !important;width:96vw;max-height:90vh;overflow-y:auto;border-radius:12px;padding:28px 32px}
   .modal-card h3{font-family:var(--display);color:var(--navy);font-size:22px;font-weight:700;margin-bottom:6px}
@@ -682,25 +711,30 @@
   .agenda-section-title{font-family:'Lora',Georgia,serif;color:var(--navy);font-size:18px;margin:28px 0 14px;font-weight:700;border-top:1px solid var(--line);padding-top:24px}
   .agenda-empty{font-size:13px;color:var(--gray);font-style:italic;padding:24px;background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center}
 
-  /* Timeline */
-  .agenda-timeline{background:#fff;border:1px solid var(--line);border-radius:10px;padding:30px 24px 24px;position:relative;overflow-x:auto;min-height:140px}
-  .agenda-timeline .tl-line{position:relative;height:2px;background:var(--line);margin:50px 30px 50px}
-  .agenda-timeline .tl-today{position:absolute;width:2px;background:var(--navy);top:-25px;bottom:-25px;z-index:1}
-  .agenda-timeline .tl-today::after{content:'hoje';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--navy);background:#fff;padding:2px 6px;border:1px solid var(--navy);border-radius:9px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-  .agenda-timeline .tl-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer;z-index:2;transition:transform .15s}
-  .agenda-timeline .tl-marker:hover{transform:translate(-50%,-50%) scale(1.4)}
-  .agenda-timeline .tl-marker.resp-V{background:var(--resp-v)}      /* Vinicius — navy */
-  .agenda-timeline .tl-marker.resp-G{background:var(--resp-g)}      /* Gabriel — terracota (distinto!) */
-  .agenda-timeline .tl-marker.resp-D{background:var(--resp-d)}      /* Os dois — sage */
-  .agenda-timeline .tl-marker.status-overdue{box-shadow:0 0 0 3px rgba(155,40,40,.45),0 1px 4px rgba(0,0,0,.18)}
-  .agenda-timeline .tl-marker.status-soon{box-shadow:0 0 0 3px rgba(181,130,16,.45),0 1px 4px rgba(0,0,0,.18)}
-  .agenda-timeline .tl-marker.status-done{box-shadow:0 0 0 3px #1a6e44,0 1px 4px rgba(0,0,0,.18);position:relative}
-  .agenda-timeline .tl-marker.status-done::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1 4l2 2 4-4' stroke='white' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat}
-  .agenda-timeline .tl-marker.is-phase{width:14px;height:14px;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
-  .agenda-timeline .tl-marker.is-phase:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
-  .agenda-timeline .tl-label{position:absolute;top:calc(50% - 38px);transform:translateX(-50%);font-size:10.5px;color:var(--ink);font-weight:700;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-  .agenda-timeline .tl-date{position:absolute;top:calc(50% + 18px);transform:translateX(-50%);font-size:9.5px;color:var(--gray);font-variant-numeric:tabular-nums;pointer-events:none}
-  .agenda-timeline .tl-marker[data-flip="1"] ~ .tl-label, .agenda-timeline .tl-marker.flip + .tl-label{top:calc(50% + 16px)}
+  /* Timeline — layout em lanes, sem sobreposição */
+  .agenda-timeline{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px;position:relative;overflow-x:auto;min-height:140px}
+  .tl-canvas{position:relative}
+  .tl-baseline{position:absolute;left:0;right:0;height:2px;background:var(--line);z-index:0}
+  .tl-today-v{position:absolute;width:2px;background:var(--navy);opacity:.5;transform:translateX(-50%);z-index:0}
+  .tl-today-tag{position:absolute;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--navy);background:#fff;padding:2px 8px;border:1.5px solid var(--navy);border-radius:9px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;z-index:3}
+  .tl-connector{position:absolute;width:1.5px;background:var(--line);transform:translateX(-50%);z-index:0}
+  .tl-card{position:absolute;transform:translateX(-50%);background:#fff;border:1.5px solid var(--line);border-left-width:4px;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--ink);line-height:1.25;box-shadow:var(--sh-1);z-index:2;box-sizing:border-box;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:default}
+  .tl-card.resp-V{border-left-color:var(--resp-v)}
+  .tl-card.resp-G{border-left-color:var(--resp-g)}
+  .tl-card.resp-D{border-left-color:var(--resp-d)}
+  .tl-card-txt{display:block}
+  .tl-marker{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;z-index:3;transition:transform .15s}
+  .tl-marker:hover{transform:translate(-50%,-50%) scale(1.35)}
+  .tl-marker.resp-V{background:var(--resp-v)}
+  .tl-marker.resp-G{background:var(--resp-g)}
+  .tl-marker.resp-D{background:var(--resp-d)}
+  .tl-marker.status-overdue{box-shadow:0 0 0 3px rgba(155,40,40,.5),0 1px 4px rgba(0,0,0,.2)}
+  .tl-marker.status-soon{box-shadow:0 0 0 3px rgba(181,130,16,.5),0 1px 4px rgba(0,0,0,.2)}
+  .tl-marker.status-done{box-shadow:0 0 0 3px #1a6e44,0 1px 4px rgba(0,0,0,.2)}
+  .tl-marker.status-done::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1 4l2 2 4-4' stroke='white' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat}
+  .tl-marker.is-phase{width:15px;height:15px;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
+  .tl-marker.is-phase:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.35)}
+  .tl-date2{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--gray);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:1}
 
   /* Calendário */
   .agenda-cal-nav{display:flex;align-items:center;gap:14px;margin-bottom:14px;font-family:'Lora',Georgia,serif;color:var(--navy)}
@@ -1552,7 +1586,7 @@
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
   var state=load();
-  ['checks','status','notes','resp','fields','content','stamps'].forEach(function(k){ if(!state[k]) state[k]={}; });
+  ['checks','status','notes','resp','fields','content','stamps','dep_overrides'].forEach(function(k){ if(!state[k]) state[k]={}; });
   if(!state.author) state.author='Vinicius';
 
   function pad(n){ return (n<10?'0':'')+n; }
@@ -1846,14 +1880,17 @@
   // Espera DOM pronto pra injetar (rodamos depois do boot principal)
   setTimeout(function(){ injectPhaseDueChips(); renderPhaseDueChips(); }, 100);
 
-  var _intCtrlDone=false;
   function applyInternalControls(){
     applyTitleOverrides();
+    applyDepOverrides();
     applyDeletedState();
-    if(_intCtrlDone) return; _intCtrlDone=true;
-
-    // torna .txt editável — usa data-tid para id confiável
+    wireInternalElements();
+  }
+  // Wiring por-elemento, idempotente (pode rodar de novo quando custom tasks renderizam).
+  function wireInternalElements(){
+    // 1) torna .txt editável — usa data-tid para id confiável
     [].slice.call(document.querySelectorAll('label.task .txt')).forEach(function(el){
+      if(el._txtWired) return; el._txtWired=true;
       var id=el.getAttribute('data-tid');
       if(!id){ var lb=el.closest?el.closest('label.task'):null; if(!lb){var p=el.parentNode;while(p&&p.tagName!=='LABEL')p=p.parentNode;lb=p;} var cb=lb?lb.querySelector('input[type=checkbox]'):null; id=cb?cb.id:null; }
       if(!id) return;
@@ -1864,45 +1901,181 @@
       el.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();el.blur();} });
     });
 
-    // adiciona input de data de entrega em cada taskint, dentro do .tfoot (depois de .resp)
+    // 2) torna .ed (O quê/Pra quê/Como) editável — pra custom tasks que renderizam depois
+    [].slice.call(document.querySelectorAll('.taskint .ed')).forEach(function(el){
+      if(el._edWired) return; el._edWired=true;
+      var key=el.getAttribute('data-edit'); if(!key) return;
+      if(state.content[key]!=null && state.content[key]!=='') el.textContent=state.content[key];
+      el.addEventListener('blur',function(){ state.content[key]=el.textContent.trim(); var bid=key.split('.')[0]; if(document.querySelector('.status[data-task="'+bid+'"]')) touch(bid); else save(); });
+      el.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+    });
+
+    // 3) torna a tag .dep editável (início imediato / paralelo / após / aprovação) em TODOS os cards
+    [].slice.call(document.querySelectorAll('label.task .dep')).forEach(function(depEl){
+      if(depEl._depWired) return; depEl._depWired=true;
+      var lb=depEl.closest('label.task'); var cb=lb?lb.querySelector('input[type=checkbox]'):null; var id=cb?cb.id:null;
+      if(!id) return;
+      depEl.classList.add('dep-editable');
+      depEl.setAttribute('title','Clique pra editar a dependência');
+      depEl.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); openDepEditor(id, depEl); });
+    });
+
+    // 4) bind dos campos de notas (textarea) das custom tasks
+    [].slice.call(document.querySelectorAll('.taskint .taskfield')).forEach(function(t){
+      if(t._fieldWired) return; t._fieldWired=true;
+      var id=t.getAttribute('data-field'); if(!id) return;
+      if(state.fields[id]) t.value=state.fields[id];
+      t.addEventListener('input',function(){ state.fields[id]=t.value; save(); });
+    });
+
+    // 5) input de data de entrega em cada .tfoot
     [].slice.call(document.querySelectorAll('.taskint')).forEach(function(ti){
       var st=ti.querySelector('.status'); var id=st?st.getAttribute('data-task'):null; if(!id) return;
-      var tfoot = ti.querySelector('.tfoot'); if(!tfoot || tfoot.querySelector('.due-input-wrap')) {} else {
+      var tfoot = ti.querySelector('.tfoot');
+      if(tfoot && !tfoot.querySelector('.due-input-wrap')){
         var wrap = document.createElement('span');
         wrap.className = 'due-input-wrap';
         wrap.innerHTML = '<label>Entrega</label><input type="date" data-due-input="'+id+'" value="'+(state.due_dates[id]||'')+'"><button class="due-clear" title="Limpar data">×</button>';
-        // Insere antes do .stamp (que fica no fim)
         var stamp = tfoot.querySelector('.stamp');
         if(stamp) tfoot.insertBefore(wrap, stamp); else tfoot.appendChild(wrap);
         var inp = wrap.querySelector('input');
         var clr = wrap.querySelector('.due-clear');
         inp.addEventListener('change', function(){
           var v = inp.value;
-          if(v) state.due_dates[id] = v;
-          else delete state.due_dates[id];
+          if(v) state.due_dates[id] = v; else delete state.due_dates[id];
           save(); renderDueChip(id); touch(id);
         });
         clr.addEventListener('click', function(e){
           e.preventDefault(); e.stopPropagation();
-          inp.value = '';
-          delete state.due_dates[id];
+          inp.value = ''; delete state.due_dates[id];
           save(); renderDueChip(id); touch(id);
         });
       }
     });
 
-    // adiciona linha de exclusão em cada taskint
+    // 6) linha de exclusão em cada taskint (custom = remove de vez; nativa = oculta)
     [].slice.call(document.querySelectorAll('.taskint')).forEach(function(ti){
       var st=ti.querySelector('.status'); var id=st?st.getAttribute('data-task'):null; if(!id||ti.querySelector('.taskdel-row')) return;
+      var lbl=document.querySelector('label.task[data-task-id="'+id+'"]');
+      var isCustom = lbl && lbl.getAttribute('data-task-kind')==='custom';
       var row=document.createElement('div'); row.className='taskdel-row';
-      var hint=document.createElement('span'); hint.className='restore-hint'; hint.textContent='Excluir oculta da lista. Use "Restaurar" na barra interna para recuperar.';
-      var btn=document.createElement('button'); btn.className='task-del-btn'; btn.textContent='× Excluir desta lista';
+      var hint=document.createElement('span'); hint.className='restore-hint';
+      hint.textContent = isCustom ? 'Esta etapa foi adicionada por você — excluir remove de vez.' : 'Excluir oculta da lista. Use "Restaurar" na barra interna para recuperar.';
+      var btn=document.createElement('button'); btn.className='task-del-btn'; btn.textContent='× Excluir';
       btn.addEventListener('click',function(e){ e.stopPropagation();
-        if(!confirm('Ocultar a etapa '+id+'? Pode restaurar depois na barra interna.')) return;
-        state.deleted[id]=true; save(); applyDeletedState();
+        if(isCustom){
+          if(!confirm('Excluir esta etapa adicionada? Esta ação não pode ser desfeita.')) return;
+          deleteCustomTask(id);
+        } else {
+          if(!confirm('Ocultar a etapa '+id+'? Pode restaurar depois na barra interna.')) return;
+          state.deleted[id]=true; save(); applyDeletedState();
+        }
       });
       row.appendChild(hint); row.appendChild(btn); ti.appendChild(row);
     });
+  }
+  window.__neonRewireInternal = function(){ applyTitleOverrides(); applyDepOverrides(); wireInternalElements(); };
+
+  // Remove uma custom task de vez, limpando todos os stores
+  function deleteCustomTask(id){
+    state.custom_tasks=(state.custom_tasks||[]).filter(function(x){return x.id!==id;});
+    ['checks','status','resp','fields','due_dates','titles','stamps','dep_overrides','deleted'].forEach(function(k){
+      if(state[k]) delete state[k][id];
+    });
+    if(state.content){ delete state.content[id+'.oque']; delete state.content[id+'.praque']; delete state.content[id+'.como']; }
+    if(state.custom_meta) delete state.custom_meta[id];
+    // remove do flow_order
+    if(state.flow_order) Object.keys(state.flow_order).forEach(function(ph){ state.flow_order[ph]=(state.flow_order[ph]||[]).filter(function(x){return x!==id;}); });
+    save();
+    if(window.renderCustomTasks) window.renderCustomTasks();
+    if(window.refreshNeonProgress) window.refreshNeonProgress();
+  }
+  window.deleteCustomTask = deleteCustomTask;
+
+  // ── EDITOR DA TAG DE DEPENDÊNCIA (paralelo / após / início imediato / aprovação) ──
+  var DEP_PRESETS = [
+    { type:'go',       cls:'dep go',   text:'início imediato', label:'Início imediato' },
+    { type:'parallel', cls:'dep',      text:'paralelo',        label:'Paralelo' },
+    { type:'seq',      cls:'dep seq',  text:'após …',          label:'Depende de outra etapa' },
+    { type:'gate',     cls:'dep gate', text:'aprovação humana',label:'Aprovação humana' }
+  ];
+  function depDefault(depEl){
+    // lê o estado atual do DOM como fallback
+    var cls='dep', type='go';
+    if(depEl.classList.contains('seq')){ type='seq'; cls='dep seq'; }
+    else if(depEl.classList.contains('gate')){ type='gate'; cls='dep gate'; }
+    else if(depEl.classList.contains('go')){ type='go'; cls='dep go'; }
+    else { type='parallel'; cls='dep'; }
+    return { type:type, cls:cls, text:depEl.textContent.trim() };
+  }
+  function applyDepOverrides(){
+    [].slice.call(document.querySelectorAll('label.task .dep')).forEach(function(depEl){
+      var lb=depEl.closest('label.task'); var cb=lb?lb.querySelector('input[type=checkbox]'):null; var id=cb?cb.id:null;
+      if(!id) return;
+      var ov=state.dep_overrides[id];
+      if(ov){
+        depEl.className = ov.cls + (depEl.classList.contains('dep-editable')?' dep-editable':'');
+        depEl.innerHTML = ov.html != null ? ov.html : esc(ov.text||'');
+      }
+    });
+  }
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function openDepEditor(id, depEl){
+    closeDepEditor();
+    var cur = state.dep_overrides[id] || depDefault(depEl);
+    var pop=document.createElement('div'); pop.className='dep-editor'; pop.id='depEditorPop';
+    var seqText = cur.type==='seq' ? (cur.text||'').replace(/^após\s*/i,'') : '';
+    pop.innerHTML =
+      '<div class="dep-editor-title">Como esta etapa começa?</div>'
+      + DEP_PRESETS.map(function(p){
+          return '<button type="button" class="dep-opt'+(cur.type===p.type?' on':'')+'" data-type="'+p.type+'">'
+            + '<span class="dep-opt-dot '+p.cls.replace('dep','').trim()+'"></span>'+p.label+'</button>';
+        }).join('')
+      + '<div class="dep-seq-row" style="'+(cur.type==='seq'?'':'display:none')+'">'
+      + '<label>Após qual(is) etapa(s)?</label>'
+      + '<input type="text" class="dep-seq-input" placeholder="ex: 0.4 · 1.2" value="'+esc(seqText)+'">'
+      + '</div>'
+      + '<div class="dep-editor-actions"><button type="button" class="dep-save">Aplicar</button></div>';
+    document.body.appendChild(pop);
+    // posiciona perto do depEl
+    var r=depEl.getBoundingClientRect();
+    pop.style.top=(window.scrollY + r.bottom + 6)+'px';
+    pop.style.left=Math.max(12, window.scrollX + r.right - 260)+'px';
+    var chosen = cur.type;
+    [].slice.call(pop.querySelectorAll('.dep-opt')).forEach(function(b){
+      b.addEventListener('click',function(){
+        chosen=b.getAttribute('data-type');
+        pop.querySelectorAll('.dep-opt').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on');
+        pop.querySelector('.dep-seq-row').style.display = chosen==='seq' ? '' : 'none';
+        if(chosen==='seq') pop.querySelector('.dep-seq-input').focus();
+      });
+    });
+    pop.querySelector('.dep-save').addEventListener('click',function(){
+      var preset = DEP_PRESETS.find(function(p){return p.type===chosen;});
+      var ov={ type:chosen, cls:preset.cls };
+      if(chosen==='seq'){
+        var t=pop.querySelector('.dep-seq-input').value.trim();
+        ov.text='após '+(t||'…');
+        ov.html='após <b>'+esc(t||'…')+'</b>';
+      } else {
+        ov.text=preset.text; ov.html=esc(preset.text);
+      }
+      state.dep_overrides[id]=ov;
+      save();
+      applyDepOverrides();
+      closeDepEditor();
+    });
+    setTimeout(function(){ document.addEventListener('mousedown', depEditorOutside); },0);
+  }
+  function depEditorOutside(e){
+    var pop=document.getElementById('depEditorPop');
+    if(pop && !pop.contains(e.target)) closeDepEditor();
+  }
+  function closeDepEditor(){
+    var pop=document.getElementById('depEditorPop');
+    if(pop) pop.remove();
+    document.removeEventListener('mousedown', depEditorOutside);
   }
 
   function applyTitleOverrides(){
@@ -2394,7 +2567,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       btn.className='add-task-btn';
       btn.setAttribute('data-phase',ph);
       btn.innerHTML='<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Adicionar etapa nesta fase';
-      btn.addEventListener('click',function(){openModal(ph);});
+      btn.addEventListener('click',function(){addCustomTaskInline(ph);});
       try{
         insertAfter.parentNode.insertBefore(btn, insertAfter.nextSibling);
       }catch(e){
@@ -2417,123 +2590,143 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     });
   }
 
-  /* ---- render custom tasks ---- */
+  /* ---- render custom tasks como ESTRUTURA NATIVA (label.task + taskint) ---- */
+  function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  // Migra custom_tasks do formato antigo (title/oque/... no objeto) pros stores unificados
+  function migrateCustomTasks(st){
+    if(!st.custom_tasks) return false;
+    if(!st.custom_meta) st.custom_meta={};
+    var changed=false;
+    st.custom_tasks.forEach(function(t){
+      if(t._migrated) return;
+      if(t.title!=null && (!st.titles[t.id])){ st.titles[t.id]=t.title; }
+      if(t.oque!=null){ st.content[t.id+'.oque']=t.oque; }
+      if(t.praque!=null){ st.content[t.id+'.praque']=t.praque; }
+      if(t.como!=null){ st.content[t.id+'.como']=t.como; }
+      if(t.depends_on || t.unlocks){ st.custom_meta[t.id]={depends_on:t.depends_on||[], unlocks:t.unlocks||[]}; }
+      // limpa campos antigos do objeto (mantém só id/phase)
+      delete t.title; delete t.oque; delete t.praque; delete t.como; delete t.code; delete t.depends_on; delete t.unlocks;
+      t._migrated=true; changed=true;
+    });
+    return changed;
+  }
   function renderCustomTasks(){
-    /* remove old renders */
-    [].slice.call(document.querySelectorAll('.custom-task-section')).forEach(function(el){el.remove();});
+    /* remove renders antigos (ambos formatos) */
+    [].slice.call(document.querySelectorAll('.custom-task-section, [data-ct-native]')).forEach(function(el){el.remove();});
     var st=loadState();
+    if(migrateCustomTasks(st)) saveState(st);
     var tasks=st.custom_tasks||[];
     tasks.forEach(function(task){
       var btn=document.querySelector('.add-task-btn[data-phase="'+task.phase+'"]');
       if(!btn) return;
-      var wrap=document.createElement('div');
-      wrap.className='custom-task-section';
-      wrap.setAttribute('data-ctid',task.id);
-      var detParts=[];
-      if(task.oque)   detParts.push('<b>O qu\u00ea:</b> '+esc(task.oque));
-      if(task.praque) detParts.push('<b>Pra qu\u00ea:</b> '+esc(task.praque));
-      if(task.como)   detParts.push('<b>Como:</b> '+esc(task.como));
-      // Mostra rela\u00e7\u00f5es configuradas no fluxo
+      var id=task.id;
+      var title = (st.titles && st.titles[id]) || '';
+      var oque = (st.content && st.content[id+'.oque']) || '';
+      var praque = (st.content && st.content[id+'.praque']) || '';
+      var como = (st.content && st.content[id+'.como']) || '';
+      var meta = (st.custom_meta && st.custom_meta[id]) || {depends_on:[], unlocks:[]};
       var nodeMap = window.NEON_FLUXO_NODE_BY_ID || {};
-      function labelOf(nid){ var n = nodeMap[nid]; return n ? n.label : nid; }
+      function labelOf(nid){ var n=nodeMap[nid]; return n?n.label:nid; }
+      // dep tag (override ou paralelo por padrão)
+      var ov = (st.dep_overrides && st.dep_overrides[id]);
+      var depCls = ov ? ov.cls : 'dep';
+      var depHtml = ov ? (ov.html!=null?ov.html:esc2(ov.text||'')) : 'paralelo';
+
+      // label.task — estrutura NATIVA idêntica
+      var lbl=document.createElement('label');
+      lbl.className='task';
+      lbl.setAttribute('data-task-id', id);
+      lbl.setAttribute('data-task-kind', 'custom');
+      lbl.setAttribute('data-ct-native','1');
+      lbl.innerHTML =
+        '<input type="checkbox" data-phase="'+task.phase+'" id="'+esc2(id)+'">'
+        +'<span class="box"><svg viewBox="0 0 12 12"><path d="M1 6L4.5 9.5L11 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+        +'<span class="lbl"><span class="code"></span><span class="txt" data-tid="'+esc2(id)+'">'+esc2(title||'Nova etapa')+'</span></span>'
+        +'<span class="'+depCls+'">'+depHtml+'</span>';
+
+      // taskint — estrutura NATIVA idêntica + linha de vínculos do fluxo
+      var ti=document.createElement('div');
+      ti.className='interno taskint';
+      ti.setAttribute('data-ct-native','1');
       var relParts=[];
-      if(task.depends_on && task.depends_on.length){
-        relParts.push('<b>\u2190 Depende de:</b> '+task.depends_on.map(labelOf).map(esc).join(', '));
-      }
-      if(task.unlocks && task.unlocks.length){
-        relParts.push('<b>\u2192 Destrava:</b> '+task.unlocks.map(labelOf).map(esc).join(', '));
-      }
-      wrap.innerHTML=
-        '<div class="custom-task-item">'
-          +'<div class="ct-hd">'
-            +'<span class="task-drag-handle interno" title="Arraste pra reordenar"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg></span>'
-            +'<label class="ct-check" title="Marcar como conclu\u00edda">'
-              +'<input type="checkbox" data-phase="'+task.phase+'" id="'+esc(task.id)+'">'
-              +'<span class="ct-box"><svg viewBox="0 0 12 12"><path d="M1 6L4.5 9.5L11 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
-            +'</label>'
-            +'<span class="ct-code">'+esc(task.code)+'</span>'
-            +'<span class="ct-title" contenteditable="true">'+esc(task.title)+'</span>'
-            +'<button class="ct-edit interno" title="Editar" data-ctid="'+esc(task.id)+'">\u270e</button>'
-            +'<button class="ct-del interno" title="Excluir">\u00d7</button>'
-          +'</div>'
-          +(detParts.length?'<div class="ct-det">'+detParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
-          +(relParts.length?'<div class="ct-rel">'+relParts.join(' &nbsp;&middot;&nbsp; ')+'</div>':'')
-          +'<div class="ct-tfoot interno">'
-            +'<div class="status" data-task="'+esc(task.id)+'">'
-              +'<button data-s="0">N\u00e3o iniciado</button>'
-              +'<button data-s="1">Em andamento</button>'
-              +'<button data-s="2">Conclu\u00eddo</button>'
-            +'</div>'
-            +'<div class="resp" data-resp="'+esc(task.id)+'">'
-              +'<span class="rlab">Respons\u00e1vel</span>'
-              +'<button data-r="V">Vinicius</button>'
-              +'<button data-r="G">Gabriel</button>'
-              +'<button data-r="D">Os dois</button>'
-            +'</div>'
-            +'<span class="due-input-wrap"><label>Entrega</label><input type="date" data-due-input="'+esc(task.id)+'"><button class="due-clear" title="Limpar data">\u00d7</button></span>'
-            +'<span class="stamp" data-stamp="'+esc(task.id)+'"></span>'
-          +'</div>'
+      if(meta.depends_on && meta.depends_on.length) relParts.push('<b>← Depende de:</b> '+meta.depends_on.map(labelOf).map(esc2).join(', '));
+      if(meta.unlocks && meta.unlocks.length) relParts.push('<b>→ Destrava:</b> '+meta.unlocks.map(labelOf).map(esc2).join(', '));
+      ti.innerHTML =
+        '<div class="det"><span class="k">O quê</span><span class="ed" data-edit="'+esc2(id)+'.oque" contenteditable="true">'+esc2(oque)+'</span></div>'
+        +'<div class="det"><span class="k">Pra quê</span><span class="ed" data-edit="'+esc2(id)+'.praque" contenteditable="true">'+esc2(praque)+'</span></div>'
+        +'<div class="det"><span class="k">Como</span><span class="ed" data-edit="'+esc2(id)+'.como" contenteditable="true">'+esc2(como)+'</span></div>'
+        +'<div class="tfoot">'
+          +'<div class="status" data-task="'+esc2(id)+'"><button data-s="0">Não iniciado</button><button data-s="1">Em andamento</button><button data-s="2">Concluído</button></div>'
+          +'<div class="resp" data-resp="'+esc2(id)+'"><span class="rlab">Responsável</span><button data-r="V">Vinicius</button><button data-r="G">Gabriel</button><button data-r="D">Os dois</button></div>'
+          +'<span class="stamp" data-stamp="'+esc2(id)+'"></span>'
+        +'</div>'
+        +'<textarea class="taskfield" data-field="'+esc2(id)+'" placeholder="Anotações desta etapa — o que está sendo feito, pendências, decisões…"></textarea>'
+        +'<div class="ct-fluxo-row">'
+          +'<span class="ct-fluxo-summary">'+(relParts.length?relParts.join(' &nbsp;·&nbsp; '):'<span class="muted">Sem vínculos no fluxo</span>')+'</span>'
+          +'<button class="ct-fluxo-btn" data-fluxo-for="'+esc2(id)+'">🔗 Editar vínculos no fluxo</button>'
         +'</div>';
-      /* wire events */
-      var titleEl=wrap.querySelector('.ct-title');
-      titleEl.addEventListener('input',function(){
-        var s=loadState(); var t=(s.custom_tasks||[]).find(function(x){return x.id===task.id;});
-        if(t){t.title=titleEl.textContent.trim();saveState(s);}
-      });
-      var editBtn=wrap.querySelector('.ct-edit');
-      if(editBtn) editBtn.addEventListener('click',function(){
-        window.openModal(task.phase, task.id);
-      });
-      // Drag-and-drop é gerenciado pelo Universal DnD Manager (window.__neonDnD)
-      wrap.setAttribute('data-task-id', task.id);
-      wrap.setAttribute('data-task-kind', 'custom');
-      if(window.__neonDnD) window.__neonDnD.bind(wrap);
-      var delBtn=wrap.querySelector('.ct-del');
-      delBtn.setAttribute('data-ctid',task.id);
-      delBtn.addEventListener('click',function(){
-        if(!confirm('Excluir esta etapa?')) return;
-        var s=loadState();
-        s.custom_tasks=(s.custom_tasks||[]).filter(function(x){return x.id!==task.id;});
-        // limpa o check pra n\u00e3o deixar lixo no state
-        if(s.checks) delete s.checks[task.id];
-        if(s.due_dates) delete s.due_dates[task.id];
-        saveState(s);
-        renderCustomTasks();
-        if(window.refreshNeonProgress) window.refreshNeonProgress();
-      });
-      // Wire-up do input de data
-      var dueInp = wrap.querySelector('input[data-due-input]');
-      var dueClr = wrap.querySelector('.due-clear');
-      if(dueInp){
-        var s0 = loadState();
-        if(s0.due_dates && s0.due_dates[task.id]) dueInp.value = s0.due_dates[task.id];
-        dueInp.addEventListener('change', function(){
-          var ss = loadState();
-          if(!ss.due_dates) ss.due_dates = {};
-          if(dueInp.value) ss.due_dates[task.id] = dueInp.value;
-          else delete ss.due_dates[task.id];
-          saveState(ss);
-          if(window.renderAllDueChips) window.renderAllDueChips();
-        });
-        if(dueClr) dueClr.addEventListener('click', function(e){
-          e.preventDefault(); e.stopPropagation();
-          dueInp.value = '';
-          var ss = loadState();
-          if(ss.due_dates) delete ss.due_dates[task.id];
-          saveState(ss);
-          if(window.renderAllDueChips) window.renderAllDueChips();
-        });
-      }
-      try{ if(btn.parentNode) btn.parentNode.insertBefore(wrap,btn); }catch(e){}
+
+      // insere antes do botão de adicionar
+      try{ btn.parentNode.insertBefore(lbl, btn); btn.parentNode.insertBefore(ti, btn); }catch(e){}
+      // wire do botão de vínculos
+      var fbtn = ti.querySelector('.ct-fluxo-btn');
+      if(fbtn) fbtn.addEventListener('click', function(){ openFluxoLinks(id); });
     });
-    // Notifica o script principal pra rebindar os novos checkboxes + status/resp e recalcular o anel.
+
+    // Re-wire universal: progress, status/resp, editáveis, due, dep, drag, ordem
     if(window.refreshNeonProgress) window.refreshNeonProgress();
     if(window.refreshStatusResp) window.refreshStatusResp();
+    if(window.__neonRewireInternal) window.__neonRewireInternal();
     if(window.renderAllDueChips) window.renderAllDueChips();
-    // Re-aplica ordem mista (customs intercaladas com nativas) — DnD universal
-    if(window.__neonDnD && window.__neonDnD.applyFlowOrder) window.__neonDnD.applyFlowOrder();
+    if(window.__neonDnD){ window.__neonDnD.injectNativeHandles(); window.__neonDnD.applyFlowOrder(); }
+    if(window.__neonRenumber) window.__neonRenumber();
   }
   window.renderCustomTasks = renderCustomTasks;
+
+  // ── Cria nova etapa INLINE (estrutura nativa, edição direta no card) ──
+  function addCustomTaskInline(phase){
+    var st=loadState();
+    if(!st.custom_tasks) st.custom_tasks=[];
+    var id='ct_'+Date.now();
+    st.custom_tasks.push({id:id, phase:phase, _migrated:true});
+    if(!st.titles) st.titles={};
+    st.titles[id]=''; // título vazio pra editar
+    if(!st.dep_overrides) st.dep_overrides={};
+    st.dep_overrides[id]={type:'parallel', cls:'dep', text:'paralelo', html:'paralelo'};
+    saveState(st);
+    renderCustomTasks();
+    // garante que a fase mostra o detalhe e foca no título da nova etapa
+    setTimeout(function(){
+      var lbl=document.querySelector('label.task[data-task-id="'+id+'"]');
+      if(lbl){
+        lbl.scrollIntoView({block:'center', behavior:'smooth'});
+        var txt=lbl.querySelector('.txt');
+        if(txt){ txt.focus();
+          // seleciona o placeholder pra digitar por cima
+          var range=document.createRange(); range.selectNodeContents(txt);
+          var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        }
+      }
+    }, 120);
+  }
+  window.addCustomTaskInline = addCustomTaskInline;
+
+  // ── Editor de vínculos no fluxo (depende de / destrava) — reusa o chip picker ──
+  function openFluxoLinks(id){
+    var st=loadState();
+    var meta=(st.custom_meta && st.custom_meta[id]) || {depends_on:[], unlocks:[]};
+    _editingId=id; _phase=null;
+    // marca modo "só vínculos"
+    document.getElementById('addTaskModal').setAttribute('data-links-only','1');
+    document.getElementById('addTaskModalTitle').textContent='Vínculos no fluxo';
+    document.getElementById('addTaskModalConfirm').textContent='Salvar vínculos';
+    renderDepsPicker('depends', meta.depends_on||[]);
+    renderDepsPicker('unlocks', meta.unlocks||[]);
+    bindDepsControls();
+    [].slice.call(document.querySelectorAll('.deps-search')).forEach(function(i){i.value='';});
+    document.getElementById('addTaskModal').classList.add('show');
+  }
+  window.openFluxoLinks = openFluxoLinks;
 
   /* ---- modal ---- */
   var _phase=0;
@@ -2550,19 +2743,8 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   }
   // Renumera todas as custom tasks no estado, agrupadas por fase.
   // Custom task fica como "phase.(max_nativo + posição_relativa + 1)".
-  function recomputeCustomCodes(){
-    var s = loadState();
-    if(!s.custom_tasks || !s.custom_tasks.length) return;
-    var byPhase = {};
-    s.custom_tasks.forEach(function(t){ (byPhase[t.phase] = byPhase[t.phase]||[]).push(t); });
-    Object.keys(byPhase).forEach(function(ph){
-      var base = maxNativeIdx(ph);
-      byPhase[ph].forEach(function(t, i){
-        t.code = ph + '.' + (base + i + 1);
-      });
-    });
-    saveState(s);
-  }
+  // Códigos agora vêm 100% da posição (renumber). Mantido como atalho pra renumerar.
+  function recomputeCustomCodes(){ if(window.__neonRenumber) window.__neonRenumber(); }
   window.recomputeCustomCodes = recomputeCustomCodes;
   // Move uma custom task dentro do array (apenas entre tasks da mesma fase).
   window.moveCustomTask = function(taskId, dir){
@@ -2718,40 +2900,21 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     setTimeout(function(){document.getElementById('newTaskTitle').focus();},80);
   };
   window.closeAddTaskModal=function(){
-    document.getElementById('addTaskModal').classList.remove('show');
+    var m=document.getElementById('addTaskModal');
+    m.classList.remove('show');
+    m.removeAttribute('data-links-only');
     _editingId = null;
   };
   window.confirmAddTask=function(){
-    var title=document.getElementById('newTaskTitle').value.trim();
-    if(!title){alert('O t\u00edtulo \u00e9 obrigat\u00f3rio.');return;}
+    // Modal agora serve S\u00d3 pra editar v\u00ednculos no fluxo (cria\u00e7\u00e3o \u00e9 inline no card)
     var depends = getPickedIds('depends');
     var unlocks = getPickedIds('unlocks');
-    var st=loadState(); if(!st.custom_tasks) st.custom_tasks=[];
+    var st=loadState();
     if(_editingId){
-      // Modo editar: atualiza task existente preservando id/checks/c\u00f3digo (c\u00f3digo \u00e9 auto)
-      var t = st.custom_tasks.find(function(x){return x.id===_editingId;});
-      if(t){
-        t.phase = _phase; t.title=title;
-        t.oque = document.getElementById('newTaskOque').value.trim();
-        t.praque = document.getElementById('newTaskPraque').value.trim();
-        t.como = document.getElementById('newTaskComo').value.trim();
-        t.depends_on = depends;
-        t.unlocks = unlocks;
-      }
-    } else {
-      // Modo criar \u2014 c\u00f3digo auto (ser\u00e1 definido por recomputeCustomCodes)
-      var task={
-        id:'ct_'+Date.now(),phase:_phase,code:'',title:title,
-        oque:document.getElementById('newTaskOque').value.trim(),
-        praque:document.getElementById('newTaskPraque').value.trim(),
-        como:document.getElementById('newTaskComo').value.trim(),
-        depends_on: depends,
-        unlocks: unlocks
-      };
-      st.custom_tasks.push(task);
+      if(!st.custom_meta) st.custom_meta={};
+      st.custom_meta[_editingId]={depends_on:depends, unlocks:unlocks};
+      saveState(st);
     }
-    saveState(st);
-    recomputeCustomCodes();
     closeAddTaskModal();
     renderCustomTasks();
     if(window.refreshNeonProgress) window.refreshNeonProgress();
@@ -2811,12 +2974,18 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
 
   function renumber(){
     [].slice.call(document.querySelectorAll('.tasks')).forEach(function(tasksEl){
-      var counters={};
-      blocksIn(tasksEl).forEach(function(b){
-        var pre=prefixOf(b.code); if(!pre) return;
-        counters[pre]=(counters[pre]||0)+1;
-        if(b.codeEl) b.codeEl.textContent=pre+'.'+counters[pre];
-      });
+      var blocks=blocksIn(tasksEl);
+      // descobre o prefixo da fase (ex: "0", "1", "2B") a partir da 1ª task nativa com código
+      var prefix=null;
+      blocks.forEach(function(b){ if(prefix) return; var p=prefixOf(b.code); if(p) prefix=p; });
+      if(!prefix){
+        var cb=tasksEl.querySelector('input[type=checkbox][data-phase]');
+        if(cb){ var ph=cb.getAttribute('data-phase'); prefix=(ph==='4'?'2B':ph); }
+      }
+      if(!prefix) return;
+      // numera TODAS as tasks (nativas + custom) sequencialmente por posição
+      var n=0;
+      blocks.forEach(function(b){ n++; if(b.codeEl) b.codeEl.textContent=prefix+'.'+n; });
     });
   }
   window.__neonRenumber = renumber;
@@ -2950,7 +3119,8 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       // Insere antes do checkbox (visualmente à esquerda)
       lbl.insertBefore(handle, lbl.firstChild);
       lbl.setAttribute('data-task-id', inp.id);
-      lbl.setAttribute('data-task-kind', 'native');
+      // não sobrescreve 'custom' já marcado pelo render unificado
+      if(!lbl.getAttribute('data-task-kind')) lbl.setAttribute('data-task-kind', 'native');
       bindEl(lbl);
     });
   }
@@ -3013,8 +3183,9 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   }
 
   // Coleta o "bloco" de um item: label nativo+taskint, OU custom-task-section sozinho.
+  // Bloco = label.task + tudo até o próximo label.task / add-task-btn.
+  // Nativas e custom têm a MESMA estrutura agora (label + taskint), então é igual.
   function blockOf(el, kind){
-    if(kind === 'custom') return [el];
     var arr = [el];
     var n = el.nextSibling;
     while(n){
@@ -3028,10 +3199,9 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     return arr;
   }
 
+  // Tudo é label.task agora (custom e nativo)
   function findEl(id, kind){
-    return kind === 'custom'
-      ? document.querySelector('.custom-task-section[data-task-id="'+id+'"]')
-      : document.querySelector('label.task[data-task-id="'+id+'"]');
+    return document.querySelector('label.task[data-task-id="'+id+'"]');
   }
 
   // Reorder UNIVERSAL: move qualquer task (nativa ou custom) antes/depois de outra
@@ -3405,29 +3575,56 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     }
     empty.style.display='none';
     tl.style.display='block';
-    // Calcula range: do mais cedo entre (hoje, primeiro marco) ao mais tarde
+    var MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    function fmtD(s){var x=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return x?Number(x[3])+'/'+MESES[Number(x[2])-1]:s;}
+    // Range temporal
     var today = new Date(); today.setHours(0,0,0,0);
     var firstD = new Date(ms[0].iso+'T00:00:00');
     var lastD = new Date(ms[ms.length-1].iso+'T00:00:00');
     var minD = today < firstD ? today : firstD;
-    minD = new Date(minD.getTime() - 86400000*7); // 7 dias de folga à esquerda
-    var maxD = new Date(lastD.getTime() + 86400000*14); // 14 dias à direita
+    minD = new Date(minD.getTime() - 86400000*5);
+    var maxD = new Date(lastD.getTime() + 86400000*10);
     var range = (maxD - minD) || 1;
-    function pct(date){ return ((date-minD)/range)*100; }
-    var html = '<div class="tl-line">';
-    // Linha do hoje
-    html += '<div class="tl-today" style="left:'+pct(today)+'%"></div>';
-    // Marcadores
-    ms.forEach(function(m, i){
-      var d = new Date(m.iso+'T00:00:00');
-      var p = pct(d);
-      var status = _status(m.iso, m.done);
-      var cls = 'tl-marker resp-'+m.resp+' status-'+status + (m.type==='phase'?' is-phase':'');
-      var flip = i % 2 === 1 ? ' flip' : '';
-      var fmt = (function(s){var x=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return x?Number(x[3])+'/'+['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][Number(x[2])-1]:s;})(m.iso);
-      html += '<div class="'+cls+flip+'" style="left:'+p+'%" title="'+(m.title.replace(/"/g,'&quot;'))+' — '+fmt+'"></div>';
-      html += '<div class="tl-label" style="left:'+p+'%;top:calc(50% '+(i%2===1?'+':'-')+' 28px)">'+escapeHtml(m.title.length>26?m.title.slice(0,26)+'…':m.title)+'</div>';
-      html += '<div class="tl-date" style="left:'+p+'%;top:calc(50% '+(i%2===1?'-':'+')+' 16px)">'+fmt+'</div>';
+    // Canvas largo com scroll horizontal — cada marco tem espaço garantido
+    var PAD=70, LBLW=150, LANE_H=42, ROW_GAP=12;
+    var innerW = Math.max(880, ms.length*176 + PAD*2);
+    function px(date){ return PAD + ((date-minD)/range)*(innerW - PAD*2); }
+    // Atribuição de "lanes" (linhas verticais) pra labels não colidirem
+    var lanesRight=[]; // x direito ocupado em cada lane
+    var placed = ms.map(function(m){
+      var x = px(new Date(m.iso+'T00:00:00'));
+      var left = x - LBLW/2;
+      var lane=0;
+      while(lane<lanesRight.length && lanesRight[lane] > left-10) lane++;
+      lanesRight[lane] = x + LBLW/2;
+      return {m:m, x:x, lane:lane};
+    });
+    var nLanes = Math.max(1, lanesRight.length);
+    var labelsBlockH = nLanes*(LANE_H+ROW_GAP);
+    var lineY = labelsBlockH + 26;        // linha central
+    var totalH = lineY + 64;              // espaço pra data embaixo
+    var todayX = px(today);
+
+    var html = '<div class="tl-canvas" style="width:'+innerW+'px;height:'+totalH+'px">';
+    // linha base
+    html += '<div class="tl-baseline" style="top:'+lineY+'px"></div>';
+    // marcador de hoje
+    html += '<div class="tl-today-v" style="left:'+todayX+'px;top:'+(lineY-labelsBlockH-8)+'px;height:'+(labelsBlockH+8+40)+'px"></div>';
+    html += '<div class="tl-today-tag" style="left:'+todayX+'px;top:'+(lineY-labelsBlockH-26)+'px">hoje</div>';
+    placed.forEach(function(p){
+      var m=p.m;
+      var status=_status(m.iso,m.done);
+      var labelY = lineY - (p.lane+1)*(LANE_H+ROW_GAP);
+      // conector vertical do marcador até a label
+      html += '<div class="tl-connector" style="left:'+p.x+'px;top:'+(labelY+LANE_H)+'px;height:'+(lineY-(labelY+LANE_H))+'px"></div>';
+      // label (caixa)
+      html += '<div class="tl-card resp-'+m.resp+'" style="left:'+p.x+'px;top:'+labelY+'px;width:'+LBLW+'px" title="'+escapeHtml(m.title)+' — '+fmtD(m.iso)+'">'
+        + '<span class="tl-card-txt">'+escapeHtml(m.title)+'</span></div>';
+      // marcador
+      var cls='tl-marker resp-'+m.resp+' status-'+status+(m.type==='phase'?' is-phase':'');
+      html += '<div class="'+cls+'" style="left:'+p.x+'px;top:'+lineY+'px" title="'+escapeHtml(m.title)+' — '+fmtD(m.iso)+'"></div>';
+      // data embaixo
+      html += '<div class="tl-date2" style="left:'+p.x+'px;top:'+(lineY+16)+'px">'+fmtD(m.iso)+'</div>';
     });
     html += '</div>';
     tl.innerHTML = html;
