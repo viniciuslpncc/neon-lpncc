@@ -735,6 +735,42 @@
   .tl-marker.is-phase{width:15px;height:15px;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
   .tl-marker.is-phase:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.35)}
   .tl-date2{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--gray);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:1}
+  /* marcador agora é button clicável */
+  .tl-marker{padding:0;border:2.5px solid #fff;outline:none}
+  .tl-marker:focus-visible{box-shadow:0 0 0 3px rgba(0,70,88,.4)}
+  .agenda-timeline{padding:14px 18px}
+  /* ===== DRAWER de etapa ===== */
+  #taskDrawerOverlay{position:fixed;inset:0;background:rgba(8,30,38,.4);opacity:0;visibility:hidden;transition:opacity .2s;z-index:200}
+  #taskDrawerOverlay.open{opacity:1;visibility:visible}
+  #taskDrawer{position:fixed;top:0;right:0;height:100%;width:400px;max-width:92vw;background:#fff;box-shadow:-8px 0 32px rgba(0,70,88,.22);transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);z-index:201;display:flex;flex-direction:column;overflow:hidden}
+  #taskDrawer.open{transform:translateX(0)}
+  #taskDrawer .drw-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)}
+  #taskDrawer .drw-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);font-weight:800}
+  #taskDrawer .drw-close{background:var(--soft);border:none;width:32px;height:32px;border-radius:8px;font-size:15px;color:var(--gray);cursor:pointer;transition:all .12s}
+  #taskDrawer .drw-close:hover{background:var(--navy);color:#fff}
+  #taskDrawerBody{padding:24px;overflow-y:auto;flex:1}
+  .drw-code{display:inline-block;font-family:var(--display);font-weight:700;font-size:14px;color:#fff;background:var(--navy);padding:4px 12px;border-radius:7px;letter-spacing:.02em;margin-bottom:12px}
+  .drw-code.resp-V{background:var(--resp-v)} .drw-code.resp-G{background:var(--resp-g)} .drw-code.resp-D{background:var(--resp-d)}
+  .drw-title{font-family:var(--display);font-size:21px;font-weight:700;color:var(--navy);line-height:1.25;margin-bottom:16px}
+  .drw-badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .drw-badge{font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:20px;letter-spacing:.02em}
+  .drw-badge.resp-V{background:var(--resp-v);color:#fff} .drw-badge.resp-G{background:var(--resp-g);color:#fff} .drw-badge.resp-D{background:var(--resp-d);color:#fff}
+  .drw-badge.st-0{background:var(--soft);color:var(--gray);border:1px solid var(--line)} .drw-badge.st-1{background:#fff5dc;color:#7a5d12} .drw-badge.st-2{background:#e3f3e9;color:#1a6e44}
+  .drw-badge.due-overdue{background:#fce8e8;color:#9b2828} .drw-badge.due-soon{background:#fff5dc;color:#7a5d12} .drw-badge.due-done{background:#e3f3e9;color:#1a6e44} .drw-badge.due-ok{background:var(--soft);color:var(--navy);border:1px solid var(--line)} .drw-badge.due-empty{background:var(--soft);color:var(--gray);border:1px solid var(--line)}
+  .drw-det{margin-bottom:18px}
+  .drw-det .drw-k{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);font-weight:800;margin-bottom:6px}
+  .drw-det p{font-size:14px;color:var(--ink);line-height:1.6;margin:0}
+  .drw-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+  .drw-row .drw-k{color:var(--gray);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .drw-due.status-overdue{color:#9b2828;font-weight:700} .drw-due.status-soon{color:#b58210;font-weight:700} .drw-due.status-done{color:#1a6e44;font-weight:700}
+  .drw-empty{font-size:13px;color:var(--gray);font-style:italic;padding:16px;background:var(--soft);border-radius:8px;margin-bottom:18px}
+  .drw-actions{margin-top:8px}
+  .drw-goto{width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:14px;font-family:var(--body);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:all .15s;box-shadow:var(--sh-2)}
+  .drw-goto:hover{background:#003040;transform:translateY(-1px);box-shadow:var(--sh-3)}
+  /* flash de destaque quando navega pro card */
+  @keyframes taskFlash{0%,100%{box-shadow:0 0 0 0 rgba(0,70,88,0)}30%{box-shadow:0 0 0 4px rgba(0,70,88,.35)}}
+  .task-flash{animation:taskFlash 1.1s ease 2;border-radius:8px;background:rgba(0,70,88,.04)!important}
+  .phase-flash{animation:taskFlash 1.1s ease 2;border-radius:12px}
 
   /* Calendário */
   .agenda-cal-nav{display:flex;align-items:center;gap:14px;margin-bottom:14px;font-family:'Lora',Georgia,serif;color:var(--navy)}
@@ -1749,7 +1785,7 @@
   };
   window.askInternal=function(){ if(unlocked){ window.setView('interna'); return; } document.getElementById('lockbg').classList.add('show'); setTimeout(function(){ document.getElementById('pwd').focus(); },50); };
   window.closeLock=function(){ document.getElementById('lockbg').classList.remove('show'); var p=document.getElementById('pwd'); p.value=''; p.classList.remove('err'); };
-  window.tryUnlock=function(){ var p=document.getElementById('pwd'); if(p.value===SENHA){ unlocked=true; closeLock(); window.setView('interna'); } else { p.classList.add('err'); setTimeout(function(){p.classList.remove('err');},400); p.select(); } };
+  window.tryUnlock=function(){ var p=document.getElementById('pwd'); if(p.value===SENHA){ unlocked=true; window.__neonUnlocked=true; closeLock(); window.setView('interna'); } else { p.classList.add('err'); setTimeout(function(){p.classList.remove('err');},400); p.select(); } };
   document.getElementById('pwd').addEventListener('keydown',function(e){ if(e.key==='Enter') tryUnlock(); });
 
   document.getElementById('resetBtn').addEventListener('click',function(){ if(!confirm('Limpar todo o progresso e as edições internas deste navegador?'))return; var keepAuthor=state.author; state={checks:{},status:{},notes:{},resp:{},fields:{},content:{},stamps:{},author:keepAuthor}; save(); location.reload(); });
@@ -3517,13 +3553,17 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     return (st.resp && st.resp[id]) || (window.RESP_DEFAULT||{})[id] || 'D';
   }
   function _titleOfTask(id, st){
-    if(id.indexOf('ct_')===0){
-      var t = (st.custom_tasks||[]).find(function(x){return x.id===id;});
-      return t ? (t.code+' '+t.title) : id;
-    }
-    // nativa: pega do DOM (com override aplicado)
+    // Lê do DOM (estrutura unificada: nativa e custom são label.task)
     var el = document.querySelector('span[data-tid="'+id+'"]');
-    if(el) return (el.parentNode.querySelector('.code')||{}).textContent + ' ' + el.textContent;
+    if(el){
+      var code=(el.parentNode.querySelector('.code')||{}).textContent||'';
+      // remove o chip de data de dentro do .txt antes de ler o título
+      var clone=el.cloneNode(true);
+      [].slice.call(clone.querySelectorAll('.due-chip')).forEach(function(c){c.remove();});
+      return (code+' '+clone.textContent.trim()).trim();
+    }
+    // fallback: state.titles
+    if(st.titles && st.titles[id]!=null) return st.titles[id];
     return id;
   }
   function _isDone(id, st){ return !!(st.checks && st.checks[id]); }
@@ -3582,52 +3622,40 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     var firstD = new Date(ms[0].iso+'T00:00:00');
     var lastD = new Date(ms[ms.length-1].iso+'T00:00:00');
     var minD = today < firstD ? today : firstD;
-    minD = new Date(minD.getTime() - 86400000*5);
-    var maxD = new Date(lastD.getTime() + 86400000*10);
+    minD = new Date(minD.getTime() - 86400000*4);
+    var maxD = new Date(lastD.getTime() + 86400000*8);
     var range = (maxD - minD) || 1;
-    // Canvas largo com scroll horizontal — cada marco tem espaço garantido
-    var PAD=70, LBLW=150, LANE_H=42, ROW_GAP=12;
-    var innerW = Math.max(880, ms.length*176 + PAD*2);
-    function px(date){ return PAD + ((date-minD)/range)*(innerW - PAD*2); }
-    // Atribuição de "lanes" (linhas verticais) pra labels não colidirem
-    var lanesRight=[]; // x direito ocupado em cada lane
-    var placed = ms.map(function(m){
-      var x = px(new Date(m.iso+'T00:00:00'));
-      var left = x - LBLW/2;
-      var lane=0;
-      while(lane<lanesRight.length && lanesRight[lane] > left-10) lane++;
-      lanesRight[lane] = x + LBLW/2;
-      return {m:m, x:x, lane:lane};
-    });
-    var nLanes = Math.max(1, lanesRight.length);
-    var labelsBlockH = nLanes*(LANE_H+ROW_GAP);
-    var lineY = labelsBlockH + 26;        // linha central
-    var totalH = lineY + 64;              // espaço pra data embaixo
-    var todayX = px(today);
+    var PAD=70, MINGAP=28;
+    var innerW0 = Math.max(760, ms.length*96 + PAD*2);
+    function px(date){ return PAD + ((date-minD)/range)*(innerW0 - PAD*2); }
+    // Posiciona cada marco e força espaçamento mínimo (declutter)
+    var dots = ms.map(function(m){ return {m:m, x:px(new Date(m.iso+'T00:00:00'))}; }).sort(function(a,b){return a.x-b.x;});
+    for(var i=1;i<dots.length;i++){ if(dots[i].x - dots[i-1].x < MINGAP) dots[i].x = dots[i-1].x + MINGAP; }
+    var innerW = Math.max(innerW0, (dots.length?dots[dots.length-1].x:0) + PAD);
+    var lineY=58, totalH=104, todayX=px(today);
 
-    var html = '<div class="tl-canvas" style="width:'+innerW+'px;height:'+totalH+'px">';
-    // linha base
+    var html='<div class="tl-canvas" style="width:'+innerW+'px;height:'+totalH+'px">';
     html += '<div class="tl-baseline" style="top:'+lineY+'px"></div>';
-    // marcador de hoje
-    html += '<div class="tl-today-v" style="left:'+todayX+'px;top:'+(lineY-labelsBlockH-8)+'px;height:'+(labelsBlockH+8+40)+'px"></div>';
-    html += '<div class="tl-today-tag" style="left:'+todayX+'px;top:'+(lineY-labelsBlockH-26)+'px">hoje</div>';
-    placed.forEach(function(p){
-      var m=p.m;
+    html += '<div class="tl-today-v" style="left:'+todayX+'px;top:18px;height:'+(totalH-36)+'px"></div>';
+    html += '<div class="tl-today-tag" style="left:'+todayX+'px;top:6px">hoje</div>';
+    var lastLabelX=-999, lastLabelIso=null;
+    dots.forEach(function(p){
+      var m=p.m, mx=p.x;
       var status=_status(m.iso,m.done);
-      var labelY = lineY - (p.lane+1)*(LANE_H+ROW_GAP);
-      // conector vertical do marcador até a label
-      html += '<div class="tl-connector" style="left:'+p.x+'px;top:'+(labelY+LANE_H)+'px;height:'+(lineY-(labelY+LANE_H))+'px"></div>';
-      // label (caixa)
-      html += '<div class="tl-card resp-'+m.resp+'" style="left:'+p.x+'px;top:'+labelY+'px;width:'+LBLW+'px" title="'+escapeHtml(m.title)+' — '+fmtD(m.iso)+'">'
-        + '<span class="tl-card-txt">'+escapeHtml(m.title)+'</span></div>';
-      // marcador
       var cls='tl-marker resp-'+m.resp+' status-'+status+(m.type==='phase'?' is-phase':'');
-      html += '<div class="'+cls+'" style="left:'+p.x+'px;top:'+lineY+'px" title="'+escapeHtml(m.title)+' — '+fmtD(m.iso)+'"></div>';
-      // data embaixo
-      html += '<div class="tl-date2" style="left:'+p.x+'px;top:'+(lineY+16)+'px">'+fmtD(m.iso)+'</div>';
+      html += '<button class="'+cls+'" style="left:'+mx+'px;top:'+lineY+'px" data-mid="'+escapeHtml(m.id)+'" title="'+escapeHtml(m.title)+' — '+fmtD(m.iso)+' · clique pra detalhes"></button>';
+      // data: só mostra se mudou de dia E há espaço (>=46px do último rótulo)
+      if(m.iso!==lastLabelIso && mx-lastLabelX>=46){
+        html += '<div class="tl-date2" style="left:'+mx+'px;top:'+(lineY+18)+'px">'+fmtD(m.iso)+'</div>';
+        lastLabelX=mx; lastLabelIso=m.iso;
+      }
     });
     html += '</div>';
     tl.innerHTML = html;
+    // Clique nos marcadores → drawer
+    [].slice.call(tl.querySelectorAll('.tl-marker[data-mid]')).forEach(function(b){
+      b.addEventListener('click', function(){ openTaskDrawer(b.getAttribute('data-mid')); });
+    });
   }
 
   function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -3671,16 +3699,106 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       html += '<div class="cal-day cal-other"><div class="cal-num">'+k+'</div>'+cellEvents(byDay[iso3])+'</div>';
     }
     cal.innerHTML = html;
+    // Clique nos eventos → drawer
+    [].slice.call(cal.querySelectorAll('.cal-event[data-mid]')).forEach(function(ev){
+      ev.addEventListener('click', function(){ openTaskDrawer(ev.getAttribute('data-mid')); });
+    });
   }
   function cellEvents(arr){
     if(!arr || !arr.length) return '';
-    var st = _state();
     return arr.map(function(m){
       var status = _status(m.iso, m.done);
       var cls = 'cal-event resp-'+m.resp+' status-'+status + (m.type==='phase'?' is-phase':'');
-      return '<div class="'+cls+'" title="'+escapeHtml(m.title)+'">'+escapeHtml(m.title)+'</div>';
+      return '<div class="'+cls+'" data-mid="'+escapeHtml(m.id)+'" title="'+escapeHtml(m.title)+' · clique pra detalhes">'+escapeHtml(m.title)+'</div>';
     }).join('');
   }
+
+  // ── DRAWER de detalhes da etapa ──
+  function openTaskDrawer(mid){
+    var st=_state();
+    var isPhase = mid.indexOf('phase-')===0;
+    var dr=document.getElementById('taskDrawer');
+    var body=document.getElementById('taskDrawerBody');
+    if(!dr||!body) return;
+    var html='';
+    if(isPhase){
+      var p=mid.replace('phase-','');
+      var iso=(st.phase_due||{})[p]||'';
+      var done=_isPhaseDone(p);
+      var status=_status(iso,done);
+      html += '<div class="drw-code">FASE '+p+'</div>';
+      html += '<div class="drw-title">'+escapeHtml(PHASE_NAMES[p]||('Fase '+p))+'</div>';
+      html += '<div class="drw-row"><span class="drw-k">Entrega</span><span class="drw-due status-'+status+'">'+(iso?fmtDrawer(iso):'sem data')+'</span></div>';
+      html += '<div class="drw-row"><span class="drw-k">Status</span><span>'+(done?'Concluída':'Em andamento')+'</span></div>';
+      html += '<div class="drw-actions"><button class="drw-goto" data-goto-phase="'+p+'">Abrir fase no painel →</button></div>';
+    } else {
+      var id=mid;
+      var title=_titleOfTask(id,st);
+      var iso=(st.due_dates||{})[id]||'';
+      var done=_isDone(id,st);
+      var status=_status(iso,done);
+      var resp=_resp(id,st);
+      var respName={V:'Vinicius',G:'Gabriel',D:'Os dois'}[resp]||'—';
+      var statusN=(st.status||{})[id];
+      var statusTxt=statusN==='2'?'Concluído':statusN==='1'?'Em andamento':'Não iniciado';
+      var oque=(st.content||{})[id+'.oque']||'';
+      var praque=(st.content||{})[id+'.praque']||'';
+      var como=(st.content||{})[id+'.como']||'';
+      // título já vem com código; separa
+      var codeMatch=title.match(/^(\S+)\s+([\s\S]*)$/);
+      var code=codeMatch?codeMatch[1]:'';
+      var ttl=codeMatch?codeMatch[2]:title;
+      html += '<div class="drw-code resp-'+resp+'">'+escapeHtml(code)+'</div>';
+      html += '<div class="drw-title">'+escapeHtml(ttl)+'</div>';
+      html += '<div class="drw-badges">';
+      html += '<span class="drw-badge resp-'+resp+'">'+escapeHtml(respName)+'</span>';
+      html += '<span class="drw-badge st-'+(statusN||'0')+'">'+statusTxt+'</span>';
+      html += '<span class="drw-badge due-'+status+'">'+(iso?('📅 '+fmtDrawer(iso)):'sem data')+'</span>';
+      html += '</div>';
+      if(oque) html += '<div class="drw-det"><span class="drw-k">O quê</span><p>'+escapeHtml(oque)+'</p></div>';
+      if(praque) html += '<div class="drw-det"><span class="drw-k">Pra quê</span><p>'+escapeHtml(praque)+'</p></div>';
+      if(como) html += '<div class="drw-det"><span class="drw-k">Como</span><p>'+escapeHtml(como)+'</p></div>';
+      if(!oque&&!praque&&!como) html += '<div class="drw-empty">Sem detalhes preenchidos ainda.</div>';
+      html += '<div class="drw-actions"><button class="drw-goto" data-goto-task="'+escapeHtml(id)+'">Abrir etapa no painel →</button></div>';
+    }
+    body.innerHTML=html;
+    dr.classList.add('open');
+    document.getElementById('taskDrawerOverlay').classList.add('open');
+    // wire goto
+    var gt=body.querySelector('[data-goto-task]');
+    if(gt) gt.addEventListener('click', function(){ gotoTaskCard(gt.getAttribute('data-goto-task')); });
+    var gp=body.querySelector('[data-goto-phase]');
+    if(gp) gp.addEventListener('click', function(){ gotoPhaseCard(gp.getAttribute('data-goto-phase')); });
+  }
+  function fmtDrawer(iso){var x=iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);var M=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];return x?Number(x[3])+' de '+M[Number(x[2])-1]+' de '+x[1]:iso;}
+  window.closeTaskDrawer=function(){
+    var dr=document.getElementById('taskDrawer'); if(dr) dr.classList.remove('open');
+    var ov=document.getElementById('taskDrawerOverlay'); if(ov) ov.classList.remove('open');
+  };
+  function gotoTaskCard(id){
+    closeTaskDrawer();
+    // sai da agenda pra visão interna (se logado) ou cliente
+    var target = document.body.classList.contains('agenda-on') ? (window.__neonUnlocked ? 'interna':'cliente') : null;
+    if(window.setView) window.setView(window.__neonUnlocked?'interna':'cliente');
+    setTimeout(function(){
+      var el=document.querySelector('label.task[data-task-id="'+id+'"]') || document.getElementById(id) && document.getElementById(id).closest('label.task');
+      if(!el){ var cb=document.getElementById(id); el=cb?cb.closest('label.task'):null; }
+      if(el){
+        el.scrollIntoView({block:'center', behavior:'smooth'});
+        el.classList.add('task-flash');
+        setTimeout(function(){ el.classList.remove('task-flash'); }, 2200);
+      }
+    }, 260);
+  }
+  function gotoPhaseCard(p){
+    closeTaskDrawer();
+    if(window.setView) window.setView(window.__neonUnlocked?'interna':'cliente');
+    setTimeout(function(){
+      var el=document.querySelector('.phase[data-phase="'+p+'"]');
+      if(el){ el.scrollIntoView({block:'start', behavior:'smooth'}); el.classList.add('phase-flash'); setTimeout(function(){el.classList.remove('phase-flash');},2200); }
+    }, 260);
+  }
+  window.openTaskDrawer=openTaskDrawer;
 
   window.agdNav = function(delta){
     agdCurrent.m += delta;
@@ -3773,6 +3891,16 @@ window.setRespFilter = function(rf){
     <div id="agenda-calendar" class="agenda-calendar"></div>
   </div>
 </section>
+
+<!-- DRAWER de detalhes da etapa (timeline + calendário) -->
+<div id="taskDrawerOverlay" onclick="closeTaskDrawer()"></div>
+<aside id="taskDrawer">
+  <div class="drw-head">
+    <span class="drw-eyebrow">Detalhes da etapa</span>
+    <button class="drw-close" onclick="closeTaskDrawer()" aria-label="Fechar">✕</button>
+  </div>
+  <div id="taskDrawerBody"></div>
+</aside>
 
 <!-- ABA FLUXO (mapa de dependências) -->
 <section id="sec-fluxo">
