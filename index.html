@@ -359,7 +359,32 @@
   /* camada interna */
   .interno{display:none}
   .taskint{margin:-2px 8px 12px 47px;padding:11px 15px;background:var(--soft);border-left:2px solid var(--sage);border-radius:0 5px 5px 0}
-  body.internal-on .taskint{display:block}
+  /* ACORDEÃO — detalhe da etapa colapsado por padrão; abre só ao clicar */
+  body.internal-on .taskint{display:none}
+  body.internal-on label.task.task-expanded + .taskint{display:block;animation:detailIn .18s ease}
+  @keyframes detailIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  body.internal-on label.task{cursor:pointer}
+  body.internal-on label.task.task-expanded{background:var(--soft);border-radius:8px 8px 0 0}
+  .task-chev{display:none;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;color:var(--gray);cursor:pointer;transition:background .12s;flex-shrink:0;margin-left:6px}
+  body.internal-on label.task .task-chev{display:inline-flex}
+  .task-chev svg{width:13px;height:13px;transition:transform .2s}
+  label.task.task-expanded .task-chev svg{transform:rotate(90deg)}
+  .task-chev:hover{background:rgba(0,70,88,.08);color:var(--navy)}
+  /* ACORDEÃO — fase macro colapsável */
+  .phase.phase-collapsed .tasks,
+  .phase.phase-collapsed .phaseint,
+  .phase.phase-collapsed .add-task-btn{display:none !important}
+  .phase.phase-collapsed{padding-bottom:6px}
+  .ph-head{cursor:pointer}
+  .ph-chev{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:var(--gray);cursor:pointer;transition:background .12s;flex-shrink:0;margin-left:10px}
+  .ph-chev svg{width:15px;height:15px;transition:transform .2s}
+  .phase:not(.phase-collapsed) .ph-chev svg{transform:rotate(90deg)}
+  .ph-chev:hover{background:rgba(0,70,88,.08);color:var(--navy)}
+  /* controle global expandir/recolher */
+  .acc-ctrl{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;margin-left:6px}
+  .acc-ctrl button{font-family:var(--body);font-size:11px;font-weight:700;padding:7px 12px;background:#fff;color:var(--navy);border:none;cursor:pointer;letter-spacing:.02em;transition:background .12s}
+  .acc-ctrl button + button{border-left:1px solid var(--line)}
+  .acc-ctrl button:hover{background:var(--soft)}
   .taskint .como{font-size:12.5px;color:var(--ink);line-height:1.5}
   .taskint .como .k{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);background:#fff;border:1px solid var(--sage);border-radius:3px;padding:1px 6px;margin-right:9px}
   .status{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:9px;background:#fff}
@@ -2716,6 +2741,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     if(window.renderAllDueChips) window.renderAllDueChips();
     if(window.__neonDnD){ window.__neonDnD.injectNativeHandles(); window.__neonDnD.applyFlowOrder(); }
     if(window.__neonRenumber) window.__neonRenumber();
+    if(window.__neonAccordion) window.__neonAccordion.apply();
   }
   window.renderCustomTasks = renderCustomTasks;
 
@@ -3780,23 +3806,40 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     // sai da agenda pra visão interna (se logado) ou cliente
     var target = document.body.classList.contains('agenda-on') ? (window.__neonUnlocked ? 'interna':'cliente') : null;
     if(window.setView) window.setView(window.__neonUnlocked?'interna':'cliente');
+    // garante fase aberta + etapa expandida ao chegar
+    try{
+      var s=JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+      if(!s.ui) s.ui={}; if(!s.ui.task_open) s.ui.task_open=[]; if(!s.ui.phase_closed) s.ui.phase_closed=[];
+      if(s.ui.task_open.indexOf(id)<0) s.ui.task_open.push(id);
+      // descobre a fase da etapa e a abre
+      var cb0=document.getElementById(id); var ph0=cb0?cb0.getAttribute('data-phase'):null;
+      if(ph0!=null) s.ui.phase_closed=s.ui.phase_closed.filter(function(x){return String(x)!==String(ph0);});
+      localStorage.setItem('projeto_neon_lpncc', JSON.stringify(s));
+    }catch(e){}
     setTimeout(function(){
-      var el=document.querySelector('label.task[data-task-id="'+id+'"]') || document.getElementById(id) && document.getElementById(id).closest('label.task');
+      if(window.__neonAccordion) window.__neonAccordion.apply();
+      var el=document.querySelector('label.task[data-task-id="'+id+'"]') || (document.getElementById(id) && document.getElementById(id).closest('label.task'));
       if(!el){ var cb=document.getElementById(id); el=cb?cb.closest('label.task'):null; }
       if(el){
         el.scrollIntoView({block:'center', behavior:'smooth'});
         el.classList.add('task-flash');
         setTimeout(function(){ el.classList.remove('task-flash'); }, 2200);
       }
-    }, 260);
+    }, 300);
   }
   function gotoPhaseCard(p){
     closeTaskDrawer();
     if(window.setView) window.setView(window.__neonUnlocked?'interna':'cliente');
+    try{
+      var s=JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+      if(s.ui&&s.ui.phase_closed) s.ui.phase_closed=s.ui.phase_closed.filter(function(x){return String(x)!==String(p);});
+      localStorage.setItem('projeto_neon_lpncc', JSON.stringify(s));
+    }catch(e){}
     setTimeout(function(){
+      if(window.__neonAccordion) window.__neonAccordion.apply();
       var el=document.querySelector('.phase[data-phase="'+p+'"]');
       if(el){ el.scrollIntoView({block:'start', behavior:'smooth'}); el.classList.add('phase-flash'); setTimeout(function(){el.classList.remove('phase-flash');},2200); }
-    }, 260);
+    }, 300);
   }
   window.openTaskDrawer=openTaskDrawer;
 
@@ -4016,6 +4059,129 @@ window.setRespFilter = function(rf){
       sendChecks();
     }
   }, 800);
+})();
+</script>
+
+<script>
+/* ── ACORDEÃO de 2 níveis: etapas e fases colapsáveis ─────────────── */
+(function(){
+  if(window.__neonAccordion) return;
+  var KEY='projeto_neon_lpncc';
+  var CHEV='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>';
+  function _state(){ try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};} }
+  function _save(s){ try{localStorage.setItem(KEY, JSON.stringify(s));}catch(e){} }
+  function _ui(s){ if(!s.ui) s.ui={}; if(!s.ui.task_open) s.ui.task_open=[]; if(!s.ui.phase_closed) s.ui.phase_closed=[]; return s.ui; }
+
+  // É um elemento interativo que NÃO deve disparar o expand?
+  function isInteractive(t){
+    return !!(t.closest && (t.closest('.task-drag-handle')||t.closest('input')||t.closest('.box')||t.closest('.txt')||t.closest('.dep')||t.closest('.due-chip')||t.closest('button')||t.closest('textarea')||t.closest('.ed')||t.closest('.status')||t.closest('.resp')||t.closest('.due-input-wrap')));
+  }
+
+  function toggleTask(id, force){
+    var s=_state(); var ui=_ui(s);
+    var open = ui.task_open.indexOf(id)>=0;
+    var willOpen = (force!=null)?force:!open;
+    ui.task_open = ui.task_open.filter(function(x){return x!==id;});
+    if(willOpen) ui.task_open.push(id);
+    _save(s);
+    applyState();
+  }
+  function togglePhase(p, force){
+    var s=_state(); var ui=_ui(s);
+    p=String(p);
+    var closed = ui.phase_closed.indexOf(p)>=0;
+    var willClose = (force!=null)?force:!closed;
+    ui.phase_closed = ui.phase_closed.filter(function(x){return x!==p;});
+    if(willClose) ui.phase_closed.push(p);
+    _save(s);
+    applyState();
+  }
+
+  function injectControls(){
+    // chevron + clique nas etapas
+    [].slice.call(document.querySelectorAll('label.task')).forEach(function(lbl){
+      var inp=lbl.querySelector('input[type=checkbox]'); var id=inp?inp.id:null; if(!id) return;
+      if(!lbl.querySelector('.task-chev')){
+        var ch=document.createElement('span');
+        ch.className='task-chev'; ch.setAttribute('title','Expandir/recolher detalhes'); ch.innerHTML=CHEV;
+        lbl.appendChild(ch);
+        ch.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleTask(id); });
+      }
+      if(!lbl._accClick){
+        lbl._accClick=true;
+        lbl.addEventListener('click', function(e){
+          if(isInteractive(e.target)) return;        // deixa checkbox/título/etc agir
+          e.preventDefault();                          // não marca o checkbox
+          toggleTask(id);
+        });
+      }
+    });
+    // chevron + clique nas fases
+    [].slice.call(document.querySelectorAll('.phase[data-phase]')).forEach(function(ph){
+      var p=ph.getAttribute('data-phase');
+      var head=ph.querySelector('.ph-head'); if(!head) return;
+      if(!head.querySelector('.ph-chev')){
+        var ch=document.createElement('span');
+        ch.className='ph-chev'; ch.setAttribute('title','Expandir/recolher a fase'); ch.innerHTML=CHEV;
+        head.appendChild(ch);
+        ch.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); togglePhase(p); });
+      }
+      if(!head._accClick){
+        head._accClick=true;
+        head.addEventListener('click', function(e){
+          if(e.target.closest('input')||e.target.closest('button')||e.target.closest('.phase-due-input')||e.target.closest('.ed')) return;
+          togglePhase(p);
+        });
+      }
+    });
+  }
+
+  function applyState(){
+    var s=_state(); var ui=_ui(s);
+    var openSet={}; ui.task_open.forEach(function(id){openSet[id]=1;});
+    [].slice.call(document.querySelectorAll('label.task')).forEach(function(lbl){
+      var inp=lbl.querySelector('input[type=checkbox]'); var id=inp?inp.id:null; if(!id) return;
+      lbl.classList.toggle('task-expanded', !!openSet[id]);
+    });
+    var closedSet={}; ui.phase_closed.forEach(function(p){closedSet[String(p)]=1;});
+    [].slice.call(document.querySelectorAll('.phase[data-phase]')).forEach(function(ph){
+      ph.classList.toggle('phase-collapsed', !!closedSet[ph.getAttribute('data-phase')]);
+    });
+  }
+
+  function apply(){ injectControls(); applyState(); }
+
+  // Controles globais na intbar
+  function injectGlobalCtrl(){
+    var acts=document.querySelector('.intbar-actions');
+    if(!acts || document.getElementById('accCtrl')) return;
+    var box=document.createElement('div');
+    box.className='acc-ctrl'; box.id='accCtrl';
+    box.innerHTML='<button data-acc="expand">Expandir tudo</button><button data-acc="collapse">Recolher tudo</button>';
+    // insere antes do botão Sair
+    var sair=acts.querySelector('.ib:last-child');
+    if(sair) acts.insertBefore(box, sair); else acts.appendChild(box);
+    box.querySelector('[data-acc="expand"]').addEventListener('click', function(){
+      var s=_state(); var ui=_ui(s);
+      ui.task_open=[].slice.call(document.querySelectorAll('label.task input[type=checkbox]')).map(function(i){return i.id;});
+      ui.phase_closed=[];
+      _save(s); applyState();
+    });
+    box.querySelector('[data-acc="collapse"]').addEventListener('click', function(){
+      var s=_state(); var ui=_ui(s);
+      ui.task_open=[];
+      _save(s); applyState();
+    });
+  }
+
+  window.__neonAccordion={ apply:apply };
+
+  function boot(){ injectGlobalCtrl(); apply(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){setTimeout(boot,400);});
+  else setTimeout(boot,400);
+  // re-aplica quando entra na interna ou quando custom tasks renderizam
+  var obs=new MutationObserver(function(){ if(document.body.classList.contains('internal-on')) setTimeout(apply,120); });
+  if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 
