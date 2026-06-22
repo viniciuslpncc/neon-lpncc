@@ -12,8 +12,8 @@
     --navy:#004658; --sage:#BCCCCE; --gray:#87868A; --white:#FFFFFF;
     --ink:#0e2f38; --line:#E4EAEA; --line-soft:#F0F3F3; --chip:#EAF0F0; --soft:#F7FAFA;
     --f0:#004658; --f1:#235F6B; --f2:#4C808B; --f3:#7CA0A6; --f4:#BCCCCE;
-    /* Cores fixas por responsável (distintas entre si) */
-    --resp-v:#004658; --resp-g:#c66a30; --resp-d:#7CA0A6;
+    /* Cores fixas por responsável (distintas + contraste AA com texto branco) */
+    --resp-v:#004658; --resp-g:#8E3F1A; --resp-d:#4C7079;
     /* Design tokens — UX overhaul */
     --sh-1:0 1px 2px rgba(0,70,88,.06);
     --sh-2:0 2px 5px rgba(0,70,88,.10);
@@ -2530,6 +2530,8 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     if(window.refreshNeonProgress) window.refreshNeonProgress();
     if(window.refreshStatusResp) window.refreshStatusResp();
     if(window.renderAllDueChips) window.renderAllDueChips();
+    // Re-aplica ordem mista (customs intercaladas com nativas) — DnD universal
+    if(window.__neonDnD && window.__neonDnD.applyFlowOrder) window.__neonDnD.applyFlowOrder();
   }
   window.renderCustomTasks = renderCustomTasks;
 
@@ -2980,9 +2982,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
         el.classList.add('task-dragging');
         try{ e.dataTransfer.setData('text/plain', kind+':'+id); }catch(err){}
         e.dataTransfer.effectAllowed = 'move';
-        // Imagem de drag: o card inteiro (não o handle pequeno)
         try{ e.dataTransfer.setDragImage(el, 30, 20); }catch(err){}
-        // Stop propagation pra não disparar drag em pais
         e.stopPropagation();
       });
       handle.addEventListener('dragend', function(){
@@ -2991,9 +2991,10 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
         dragging = null; dragKind = null; dragId = null;
       });
     }
-    // Drop zone: o card inteiro aceita drop
+    // Drop zone: ACEITA drag de qualquer kind (universal) desde que mesmo .tasks (mesma fase)
     el.addEventListener('dragover', function(e){
-      if(!dragging || dragKind !== kind || el === dragging) return;
+      if(!dragging || el === dragging) return;
+      if(el.parentNode !== dragging.parentNode) return; // só dentro da mesma fase
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       var pos = dropPosition(el, e.clientY);
@@ -3002,22 +3003,20 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     });
     el.addEventListener('dragleave', function(){ el.classList.remove('task-drop-before','task-drop-after'); });
     el.addEventListener('drop', function(e){
-      if(!dragging || dragKind !== kind || el === dragging) return;
+      if(!dragging || el === dragging) return;
+      if(el.parentNode !== dragging.parentNode) return;
       e.preventDefault();
       var pos = dropPosition(el, e.clientY);
       clearDropMarkers();
-      var srcId = dragId;
-      var tgtId = id;
-      if(kind === 'native') reorderNative(srcId, tgtId, pos);
-      else reorderCustom(srcId, tgtId, pos);
+      reorderTask(dragId, dragKind, id, kind, pos);
     });
   }
 
-  // Coleta o "bloco" de uma task nativa: o label + tudo até o próximo label.task,
-  // .custom-task-section ou .add-task-btn (qualquer coisa que delimite o próximo bloco).
-  function nativeBlock(lbl){
-    var arr = [lbl];
-    var n = lbl.nextSibling;
+  // Coleta o "bloco" de um item: label nativo+taskint, OU custom-task-section sozinho.
+  function blockOf(el, kind){
+    if(kind === 'custom') return [el];
+    var arr = [el];
+    var n = el.nextSibling;
     while(n){
       if(n.nodeType === 1){
         if(n.tagName === 'LABEL' && n.classList.contains('task')) break;
@@ -3028,77 +3027,130 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
     }
     return arr;
   }
-  // Reordena tasks NATIVAS — move o bloco inteiro (label + taskint + qualquer
-  // sibling intermediário) preservando integridade do DOM.
-  function reorderNative(srcId, tgtId, pos){
-    var srcLbl = document.querySelector('label.task[data-task-id="'+srcId+'"]');
-    var tgtLbl = document.querySelector('label.task[data-task-id="'+tgtId+'"]');
-    if(!srcLbl || !tgtLbl) return;
-    if(srcLbl.parentNode !== tgtLbl.parentNode) return;
-    var parent = tgtLbl.parentNode;
-    var srcBlock = nativeBlock(srcLbl);
-    // Calcula refPoint: onde inserir
+
+  function findEl(id, kind){
+    return kind === 'custom'
+      ? document.querySelector('.custom-task-section[data-task-id="'+id+'"]')
+      : document.querySelector('label.task[data-task-id="'+id+'"]');
+  }
+
+  // Reorder UNIVERSAL: move qualquer task (nativa ou custom) antes/depois de outra
+  function reorderTask(srcId, srcKind, tgtId, tgtKind, pos){
+    var srcEl = findEl(srcId, srcKind);
+    var tgtEl = findEl(tgtId, tgtKind);
+    if(!srcEl || !tgtEl) return;
+    if(srcEl.parentNode !== tgtEl.parentNode) return;
+    var parent = tgtEl.parentNode;
+    var srcBlock = blockOf(srcEl, srcKind);
     var refPoint;
     if(pos === 'before'){
-      refPoint = tgtLbl;
+      refPoint = tgtEl;
     } else {
-      // Pula o bloco do alvo
-      var tgtBlock = nativeBlock(tgtLbl);
+      var tgtBlock = blockOf(tgtEl, tgtKind);
       refPoint = tgtBlock[tgtBlock.length - 1].nextSibling;
     }
-    // Verifica se refPoint está dentro do srcBlock (loop infinito) — proteção
-    if(srcBlock.indexOf(refPoint) >= 0) return;
-    // Move todos os elementos do bloco src pra antes de refPoint (ou no fim se null)
+    if(srcBlock.indexOf(refPoint) >= 0) return; // anti-loop
     srcBlock.forEach(function(el){
       if(refPoint) parent.insertBefore(el, refPoint);
       else parent.appendChild(el);
     });
-    // Persiste a nova ordem das nativas no state.order
-    saveNativeOrder(parent);
+    // Se moveu uma custom pra outra fase (drop em nativa de fase diferente), atualiza
+    syncCustomPhases();
+    saveFlowOrder(parent);
     if(window.__neonRenumber) window.__neonRenumber();
     if(window.recomputeCustomCodes) window.recomputeCustomCodes();
-    if(window.renderCustomTasks) window.renderCustomTasks();
     if(window.renderAllDueChips) window.renderAllDueChips();
   }
-  function saveNativeOrder(tasksEl){
+
+  // Atualiza phase das custom tasks baseado em qual .tasks elas estão no DOM
+  function syncCustomPhases(){
     var s = _state();
+    if(!s.custom_tasks) return;
+    var changed = false;
+    s.custom_tasks.forEach(function(t){
+      var el = findEl(t.id, 'custom');
+      if(!el) return;
+      var tasksEl = el.closest('.tasks');
+      if(!tasksEl) return;
+      var firstCb = tasksEl.querySelector('input[type=checkbox][data-phase]');
+      if(!firstCb) return;
+      var ph = firstCb.getAttribute('data-phase');
+      if(String(t.phase) !== ph){ t.phase = ph; changed = true; }
+    });
+    if(changed) _save(s);
+  }
+
+  // Salva ordem completa (nativas + customs misturados) em state.flow_order[phase]
+  // E mantém state.order[phase] (só nativas) e state.custom_tasks (na ordem) pra compatibilidade
+  function saveFlowOrder(tasksEl){
+    var s = _state();
+    if(!s.flow_order) s.flow_order = {};
     if(!s.order) s.order = {};
-    var ids = [].slice.call(tasksEl.querySelectorAll(':scope > label.task')).map(function(l){return l.getAttribute('data-task-id');}).filter(Boolean);
-    // Identifica a fase pelo data-phase do primeiro checkbox
     var firstCb = tasksEl.querySelector('input[type=checkbox][data-phase]');
     if(!firstCb) return;
     var phase = firstCb.getAttribute('data-phase');
-    s.order[phase] = ids;
+    var mixedIds = [];
+    var nativeIds = [];
+    [].slice.call(tasksEl.children).forEach(function(c){
+      if(c.tagName === 'LABEL' && c.classList.contains('task')){
+        var id = c.getAttribute('data-task-id');
+        if(id){ mixedIds.push(id); nativeIds.push(id); }
+      } else if(c.classList && c.classList.contains('custom-task-section')){
+        var id = c.getAttribute('data-task-id');
+        if(id) mixedIds.push(id);
+      }
+    });
+    s.flow_order[phase] = mixedIds;
+    s.order[phase] = nativeIds;
+    // Reordena state.custom_tasks pra refletir ordem do DOM (entre todas as fases)
+    if(s.custom_tasks){
+      var rank = {};
+      // Itera todas as fases e dá rank por posição
+      Object.keys(s.flow_order).forEach(function(ph){
+        s.flow_order[ph].forEach(function(id, i){
+          rank[id] = parseInt(ph,10)*10000 + i;
+        });
+      });
+      s.custom_tasks.sort(function(a, b){
+        var ra = rank[a.id]; var rb = rank[b.id];
+        if(ra == null && rb == null) return 0;
+        if(ra == null) return 1;
+        if(rb == null) return -1;
+        return ra - rb;
+      });
+    }
     _save(s);
   }
 
-  // Reordena custom tasks: move no array state.custom_tasks
-  function reorderCustom(srcId, tgtId, pos){
+  // Aplica flow_order ao DOM: reorganiza blocos pra bater com state.flow_order
+  function applyFlowOrder(){
     var s = _state();
-    var arr = s.custom_tasks || [];
-    var srcIdx = arr.findIndex(function(t){return t.id===srcId;});
-    var tgtIdx = arr.findIndex(function(t){return t.id===tgtId;});
-    if(srcIdx<0 || tgtIdx<0) return;
-    var moved = arr.splice(srcIdx,1)[0];
-    // Se mudou de fase, herda a fase do alvo
-    moved.phase = arr[tgtIdx > srcIdx ? tgtIdx-1 : tgtIdx].phase;
-    var newTgtIdx = arr.findIndex(function(t){return t.id===tgtId;});
-    var insertAt = pos === 'before' ? newTgtIdx : newTgtIdx + 1;
-    arr.splice(insertAt, 0, moved);
-    _save(s);
-    if(window.recomputeCustomCodes) window.recomputeCustomCodes();
-    if(window.renderCustomTasks) window.renderCustomTasks();
-    if(window.refreshNeonProgress) window.refreshNeonProgress();
+    if(!s.flow_order) return;
+    Object.keys(s.flow_order).forEach(function(phase){
+      var btn = document.querySelector('.add-task-btn[data-phase="'+phase+'"]');
+      if(!btn) return;
+      var tasksEl = btn.parentNode;
+      var ids = s.flow_order[phase];
+      ids.forEach(function(id){
+        var el = findEl(id, 'custom') || findEl(id, 'native');
+        if(!el || el.parentNode !== tasksEl) return;
+        var kind = el.classList.contains('custom-task-section') ? 'custom' : 'native';
+        var block = blockOf(el, kind);
+        block.forEach(function(e){ tasksEl.insertBefore(e, btn); });
+      });
+    });
   }
 
   window.__neonDnD = {
     bind: bindEl,
-    injectNativeHandles: injectNativeHandles
+    injectNativeHandles: injectNativeHandles,
+    applyFlowOrder: applyFlowOrder
   };
 
-  // Injeta handles nas nativas após o boot
+  // Injeta handles nas nativas após o boot + aplica flow_order salvo
   function init(){
     injectNativeHandles();
+    setTimeout(applyFlowOrder, 200); // depois de renderCustomTasks rodar
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){setTimeout(init,300);});
   else setTimeout(init, 300);
