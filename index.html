@@ -642,6 +642,8 @@
   .task-del-btn:hover{border-color:#d88 !important;color:#c0392b !important}
   /* Título da tarefa: um pouco mais de peso pra hierarquia */
   label.task .lbl .txt{font-weight:500}
+  /* Placeholder pro título vazio (etapa recém-criada) */
+  body.internal-on label.task .txt:empty::before{content:attr(data-ph);color:var(--gray);opacity:.5;font-weight:400}
   /* Código: chip mais discreto */
   .code{background:#eef3f3 !important;color:#5a7a82 !important;font-size:10.5px !important}
   /* Reorder: integra melhor */
@@ -1819,6 +1821,19 @@
   // ── TÍTULOS EDITÁVEIS + EXCLUSÃO ──────────────────────────────
   ['titles','deleted','due_dates','phase_due'].forEach(function(k){ if(!state[k]) state[k]={}; });
 
+  // Limpeza única: remove chip de data "📅 ..." que possa ter vazado pra dentro do título salvo
+  (function cleanCorruptTitles(){
+    var changed=false;
+    Object.keys(state.titles||{}).forEach(function(id){
+      var v=state.titles[id];
+      if(typeof v==='string' && v.indexOf('📅')>=0){
+        state.titles[id]=v.replace(/\s*📅[^]*$/,'').trim();
+        changed=true;
+      }
+    });
+    if(changed) save();
+  })();
+
   // ── DATAS DE ENTREGA — utilitários ─────────────────────────────
   var MES_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   function fmtDate(iso){
@@ -1861,20 +1876,10 @@
     chip.className = 'due-chip ' + status;
     chip.setAttribute('data-due-for', id);
     chip.innerHTML = '📅 ' + fmtDate(due);
-    // Acopla o chip no lugar certo: pra nativas no .lbl (depois de .txt); pra custom no .ct-hd (depois de .ct-title)
+    // Anexa o chip ao .lbl como IRMÃO do .txt (nunca dentro do .txt, senão
+    // a edição do título captura o texto do chip e duplica/corrompe).
     var lbl = cb.closest && cb.closest('label.task') ? cb.closest('label.task').querySelector('.lbl') : null;
-    if(lbl){
-      var txt = lbl.querySelector('.txt');
-      if(txt) txt.appendChild(chip);
-      else lbl.appendChild(chip);
-      return;
-    }
-    var ctHd = cb.closest && cb.closest('.custom-task-item') ? cb.closest('.custom-task-item').querySelector('.ct-hd') : null;
-    if(ctHd){
-      var ctTitle = ctHd.querySelector('.ct-title');
-      if(ctTitle) ctTitle.appendChild(chip);
-      else ctHd.appendChild(chip);
-    }
+    if(lbl){ lbl.appendChild(chip); }
   }
   function renderAllDueChips(){
     boxes.forEach(function(b){ renderDueChip(b.id); });
@@ -1957,8 +1962,8 @@
       if(!id) return;
       el.setAttribute('contenteditable','true');
       el.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); el.focus(); });
-      el.addEventListener('input',function(){ state.titles[id]=el.textContent.trim(); save(); });
-      el.addEventListener('blur',function(){ state.titles[id]=el.textContent.trim(); save(); });
+      el.addEventListener('input',function(){ if(!el.textContent.trim() && el.innerHTML!=='') el.innerHTML=''; state.titles[id]=el.textContent.trim(); save(); });
+      el.addEventListener('blur',function(){ if(!el.textContent.trim() && el.innerHTML!=='') el.innerHTML=''; state.titles[id]=el.textContent.trim(); save(); });
       el.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();el.blur();} });
     });
 
@@ -2773,7 +2778,7 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       lbl.innerHTML =
         '<input type="checkbox" data-phase="'+task.phase+'" id="'+esc2(id)+'">'
         +'<span class="box"><svg viewBox="0 0 12 12"><path d="M1 6L4.5 9.5L11 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
-        +'<span class="lbl"><span class="code"></span><span class="txt" data-tid="'+esc2(id)+'">'+esc2(title||'Nova etapa')+'</span></span>'
+        +'<span class="lbl"><span class="code"></span><span class="txt" data-tid="'+esc2(id)+'" data-ph="Escreva o título da etapa…">'+esc2(title)+'</span></span>'
         +'<span class="'+depCls+'">'+depHtml+'</span>';
 
       // taskint — estrutura NATIVA idêntica + linha de vínculos do fluxo
@@ -2818,29 +2823,40 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
 
   // ── Cria nova etapa INLINE (estrutura nativa, edição direta no card) ──
   function addCustomTaskInline(phase){
+    // Commit de qualquer edição em andamento (título de outra etapa) antes de criar
+    if(document.activeElement && document.activeElement.blur) {
+      try{ document.activeElement.blur(); }catch(e){}
+    }
+    // limpa qualquer seleção de texto ativa (evita que o clique seja "absorvido")
+    try{ var sel0=window.getSelection(); if(sel0) sel0.removeAllRanges(); }catch(e){}
     var st=loadState();
     if(!st.custom_tasks) st.custom_tasks=[];
-    var id='ct_'+Date.now();
+    var id='ct_'+Date.now()+'_'+Math.floor(performance.now()*1000%100000);
     st.custom_tasks.push({id:id, phase:phase, _migrated:true});
     if(!st.titles) st.titles={};
     st.titles[id]=''; // título vazio pra editar
     if(!st.dep_overrides) st.dep_overrides={};
     st.dep_overrides[id]={type:'parallel', cls:'dep', text:'paralelo', html:'paralelo'};
+    // já abre a etapa nova (expandida) pra facilitar o preenchimento
+    if(!st.ui) st.ui={}; if(!st.ui.task_open) st.ui.task_open=[];
+    if(st.ui.task_open.indexOf(id)<0) st.ui.task_open.push(id);
     saveState(st);
     renderCustomTasks();
-    // garante que a fase mostra o detalhe e foca no título da nova etapa
+    if(window.__neonAccordion) window.__neonAccordion.apply();
+    // foca o título da nova etapa com cursor no FIM (sem select-all — evita o bug do clique absorvido)
     setTimeout(function(){
       var lbl=document.querySelector('label.task[data-task-id="'+id+'"]');
-      if(lbl){
-        lbl.scrollIntoView({block:'center', behavior:'smooth'});
-        var txt=lbl.querySelector('.txt');
-        if(txt){ txt.focus();
-          // seleciona o placeholder pra digitar por cima
-          var range=document.createRange(); range.selectNodeContents(txt);
+      if(!lbl) return;
+      lbl.scrollIntoView({block:'center', behavior:'smooth'});
+      var txt=lbl.querySelector('.txt');
+      if(txt){
+        txt.focus();
+        try{
+          var range=document.createRange(); range.selectNodeContents(txt); range.collapse(false);
           var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-        }
+        }catch(e){}
       }
-    }, 120);
+    }, 140);
   }
   window.addCustomTaskInline = addCustomTaskInline;
 
