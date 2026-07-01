@@ -116,8 +116,8 @@
   .dep-save{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--body);transition:all .12s}
   .dep-save:hover{background:#003040;transform:translateY(-1px);box-shadow:var(--sh-2)}
   /* ===== Linha de vínculos do fluxo na taskint ===== */
-  .ct-fluxo-row{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);flex-wrap:wrap}
-  body.internal-on .ct-fluxo-row{display:flex}
+  /* ct-fluxo-row obsoleto — a dependência agora é definida pela tag "após X" (dep) em cada card */
+  .ct-fluxo-row{display:none !important}
   .ct-fluxo-summary{font-size:12px;color:var(--navy);line-height:1.5}
   .ct-fluxo-summary .muted{color:var(--gray);font-style:italic}
   .ct-fluxo-btn{background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--navy);cursor:pointer;font-family:var(--body);transition:all .12s;white-space:nowrap}
@@ -727,8 +727,8 @@
   body.agenda-on > .topbar{position:fixed;top:0;left:0;right:0;z-index:50}
   body.agenda-on > .wrap, body.agenda-on > .intbar, body.agenda-on > footer{display:none !important}
   /* Botão "Agenda" só aparece pra quem já está na visão interna (e agenda-on permite continuar visível) */
-  #btnAgd{display:none}
-  body.internal-on #btnAgd, body.agenda-on #btnAgd{display:inline-flex}
+  /* Agenda agora é visível pra todos (cliente e interna) */
+  #btnAgd{display:inline-flex}
   .agenda-wrap{max-width:1200px;margin:0 auto;padding:90px 40px 60px;font-family:var(--body)}
   .agenda-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:28px;flex-wrap:wrap}
   .agenda-head h2{font-family:'Lora',Georgia,serif;color:var(--navy);font-size:28px;margin:8px 0 6px;font-weight:700}
@@ -871,7 +871,7 @@
       <h1>Projeto Neon.</h1>
       <p class="lede">Tirar o comercial do operacional e botar a operação pra rodar com tecnologia. <strong>A máquina assume o repetitivo. O time comercial volta a vender, cuidar do cliente e prospectar.</strong></p>
       <div class="meta">
-        <div class="it"><div class="k">Período</div><div class="v">01 jun → 30 nov</div></div>
+        <div class="it"><div class="k">Período</div><div class="v">19 jun → 18 dez</div></div>
         <div class="it"><div class="k">Duração</div><div class="v">6 meses</div></div>
         <div class="it"><div class="k">Consultoria</div><div class="v">Vinicius Lupinacci</div></div>
         <div class="it"><div class="k">Braço técnico</div><div class="v">Gabriel Cunha</div></div>
@@ -1586,7 +1586,7 @@
   </div>
   <div class="contracts-grid">
     <div class="cbox"><div class="ct">Acordo</div><h4>Escopo</h4><p>Até onde a LPNCC entra e o que fica com a Neon. Limites das quatro frentes.</p><span class="ad">A definir</span></div>
-    <div class="cbox"><div class="ct">Acordo</div><h4>Prazo e formato</h4><p>6 meses, de 01/jun a 30/nov, com reunião semanal de acompanhamento.</p><span class="ad">A definir</span></div>
+    <div class="cbox"><div class="ct">Acordo</div><h4>Prazo e formato</h4><p>6 meses, de 19/jun a 18/dez, com reunião semanal de acompanhamento.</p><span class="ad">A definir</span></div>
     <div class="cbox"><div class="ct">Acordo</div><h4>Remuneração</h4><p>Modelo a combinar — fixo mensal, por êxito, ou misto.</p><span class="ad">A definir</span></div>
     <div class="cbox"><div class="ct">Acordo</div><h4>Confidencialidade</h4><p>Proteção da metodologia e da receita técnica da LPNCC.</p><span class="ad">A definir</span></div>
   </div>
@@ -2250,7 +2250,7 @@
   <div style="border:1px solid var(--line);border-left:5px solid var(--sage);background:var(--soft);border-radius:8px;padding:20px 24px;margin-bottom:14px">
     <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);font-weight:700;margin-bottom:10px">O modelo em uma frase</div>
     <p style="font-size:16px;color:var(--navy);line-height:1.55;font-weight:700;font-family:'Lora',Georgia,serif">A LPNCC só ganha se a NEON crescer — e ganha 15% sobre o quanto cresceu.</p>
-    <p style="font-size:13px;color:var(--ink);margin-top:8px;line-height:1.65">Durante 6 meses de execução (jun–nov/2026), <strong>zero remuneração fixa</strong>. Depois da entrega, durante 12 meses (jan–dez/2027), 15% da diferença entre o faturamento real e a base congelada de <strong>R$ 105.639,40/mês</strong>. Se não cresceu acima de 5%, a LPNCC não recebe nada naquele mês.</p>
+    <p style="font-size:13px;color:var(--ink);margin-top:8px;line-height:1.65">Durante 6 meses de execução (jun–dez/2026), <strong>zero remuneração fixa</strong>. Depois da entrega, durante 12 meses (jan–dez/2027), 15% da diferença entre o faturamento real e a base congelada de <strong>R$ 105.639,40/mês</strong>. Se não cresceu acima de 5%, a LPNCC não recebe nada naquele mês.</p>
   </div>
 
   <!-- OBJETIVO DA PARCERIA -->
@@ -2318,16 +2318,16 @@
   <!-- CALENDÁRIO DA JANELA -->
   <h2 style="font-family:'Lora',Georgia,serif;color:var(--navy);font-size:19px;margin-bottom:12px;font-weight:700">A linha do tempo do contrato.</h2>
   <div style="border:1px solid var(--line);border-radius:8px;padding:18px 22px;margin-bottom:30px;background:#fff">
-    <!-- Barra única em 19 colunas (jun/26 a dez/27). Execução nas cols 1-6, gap na col 7 (dez/26 = Entrega), Janela nas cols 8-19. -->
+    <!-- Barra única em 19 colunas (jun/26 a dez/27). Execução nas cols 1-7 (19/jun→18/dez), Entrega no fim de dez/26, Janela nas cols 8-19. -->
     <div style="display:grid;grid-template-columns:repeat(19,1fr);gap:3px;margin-bottom:8px">
-      <div style="grid-column:1 / span 6;background:var(--navy);height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Execução · 6 meses · sem remuneração fixa</div>
+      <div style="grid-column:1 / span 7;background:var(--navy);height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Execução · 6 meses · sem remuneração fixa</div>
       <div style="grid-column:8 / span 12;background:#1a8a5a;height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:700;padding:0 6px;text-align:center">Janela de Recebimento · 12 apurações mensais</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(19,1fr);gap:3px;font-size:9px;color:var(--gray);text-align:center;line-height:1.2">
-      <div>jun/26</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div><div style="color:#1a8a5a;font-weight:700">dez/26<br><span style="font-size:8px">▼ Entrega</span></div>
+      <div>jun/26</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div><div style="color:#1a8a5a;font-weight:700">dez/26<br><span style="font-size:8px">▼ Entrega 18/dez</span></div>
       <div>jan/27</div><div>fev</div><div>mar</div><div>abr</div><div>mai</div><div>jun</div><div>jul</div><div>ago</div><div>set</div><div>out</div><div>nov</div><div>dez/27</div>
     </div>
-    <p style="font-size:12px;color:var(--gray);line-height:1.55;margin-top:14px"><strong style="color:var(--navy)">Entrega = 30/nov/2026</strong> (fim da Fase 3, com documentação e passagem de operação). A <strong>Janela de Recebimento começa em jan/2027</strong> (primeiro mês civil pós-Entrega) e vai até dez/2027. A primeira apuração tem por base o trimestre fechado anterior; primeiro pagamento em até 15 dias após o fechamento contábil.</p>
+    <p style="font-size:12px;color:var(--gray);line-height:1.55;margin-top:14px"><strong style="color:var(--navy)">Entrega = 18/dez/2026</strong> (fim da Fase 3, com documentação e passagem de operação). A <strong>Janela de Recebimento começa em jan/2027</strong> (primeiro mês civil pós-Entrega) e vai até dez/2027. A primeira apuração tem por base o trimestre fechado anterior; primeiro pagamento em até 15 dias após o fechamento contábil.</p>
   </div>
 
   <!-- DIREITOS E DEVERES LADO A LADO -->
@@ -2407,7 +2407,7 @@
       <span style="font-family:'Lora',Georgia,serif;font-size:13.5px;font-weight:700;color:var(--navy)">Cláusula 2 — Do Prazo e do Formato</span>
       <span class="arr" style="font-size:18px;color:var(--sage);font-weight:700">+</span>
     </button>
-    <div style="display:none;padding:16px 20px;font-size:13px;color:var(--ink);line-height:1.75"><strong>Execução: 01/jun a 30/nov/2026</strong> (6 meses). Reunião <strong>quinzenal</strong> de acompanhamento — pode virar mensal em fases mais leves, por acordo escrito. <strong>Entrega do Projeto</strong> = conclusão da Fase 3 (Gestão) com documentação e passagem de operação para a NEON, prevista para 30/11/2026.</div>
+    <div style="display:none;padding:16px 20px;font-size:13px;color:var(--ink);line-height:1.75"><strong>Execução: 19/jun a 18/dez/2026</strong> (6 meses). Reunião <strong>quinzenal</strong> de acompanhamento — pode virar mensal em fases mais leves, por acordo escrito. <strong>Entrega do Projeto</strong> = conclusão da Fase 3 (Gestão) com documentação e passagem de operação para a NEON, prevista para 18/12/2026.</div>
   </div>
   <div style="border:1px solid var(--line);border-radius:7px;margin-bottom:6px;overflow:hidden">
     <button onclick="var d=this.nextElementSibling;var open=d.style.display!=='none';d.style.display=open?'none':'block';this.querySelector('.arr').textContent=open?'+':'&#8722;'" style="width:100%;background:var(--soft);border:none;padding:14px 18px;text-align:left;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
@@ -2552,7 +2552,7 @@
     <div style="border:1px solid var(--line);border-radius:8px;padding:14px 18px"><div style="font-family:'Lora',Georgia,serif;font-size:13.5px;color:var(--navy);font-weight:700;margin-bottom:4px">Crescimento Apurado</div><p style="font-size:12.5px;color:var(--ink);line-height:1.55">Média móvel dos 3 meses anteriores <strong>menos</strong> a Base de Referência. Pode ser zero ou negativo (sem cobrança).</p></div>
     <div style="border:1px solid var(--line);border-radius:8px;padding:14px 18px"><div style="font-family:'Lora',Georgia,serif;font-size:13.5px;color:var(--navy);font-weight:700;margin-bottom:4px">Gatilho</div><p style="font-size:12.5px;color:var(--ink);line-height:1.55">Crescimento Apurado precisa ser <strong>maior que 5% da Base</strong> para disparar. Cruzado o gatilho, a participação incide sobre o crescimento <em>integral</em> (não é franquia).</p></div>
     <div style="border:1px solid var(--line);border-radius:8px;padding:14px 18px"><div style="font-family:'Lora',Georgia,serif;font-size:13.5px;color:var(--navy);font-weight:700;margin-bottom:4px">Janela de Recebimento</div><p style="font-size:12.5px;color:var(--ink);line-height:1.55">12 apurações mensais começando no primeiro dia do mês civil pós-Entrega. Encerrada, cessa a participação — <strong>não é royalty perpétuo</strong>.</p></div>
-    <div style="border:1px solid var(--line);border-radius:8px;padding:14px 18px"><div style="font-family:'Lora',Georgia,serif;font-size:13.5px;color:var(--navy);font-weight:700;margin-bottom:4px">Entrega do Projeto</div><p style="font-size:12.5px;color:var(--ink);line-height:1.55">Conclusão da Fase 3 (Gestão), com documentação e passagem de operação para a NEON. Prevista para <strong>30/11/2026</strong>.</p></div>
+    <div style="border:1px solid var(--line);border-radius:8px;padding:14px 18px"><div style="font-family:'Lora',Georgia,serif;font-size:13.5px;color:var(--navy);font-weight:700;margin-bottom:4px">Entrega do Projeto</div><p style="font-size:12.5px;color:var(--ink);line-height:1.55">Conclusão da Fase 3 (Gestão), com documentação e passagem de operação para a NEON. Prevista para <strong>18/12/2026</strong>.</p></div>
   </div>
 
   <div style="border:1px solid var(--line);border-radius:6px;padding:11px 16px;background:var(--soft);font-size:11.5px;color:var(--gray);text-align:center;margin-top:18px">Lupinacci Consultoria Ltda · CNPJ 21.075.219/0001-20 · Projeto Neon · Contrato assinado em 19/06/2026 (SuperSign · ICP-Brasil) — texto integral em PDF prevalece</div>
@@ -3870,33 +3870,45 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
       html += '<div class="drw-actions"><button class="drw-goto" data-goto-phase="'+p+'">Abrir fase no painel →</button></div>';
     } else {
       var id=mid;
+      var isInternal = !!window.__neonUnlocked;   // só logado vê detalhes internos
       var title=_titleOfTask(id,st);
       var iso=(st.due_dates||{})[id]||'';
       var done=_isDone(id,st);
       var status=_status(iso,done);
-      var resp=_resp(id,st);
-      var respName={V:'Vinicius',G:'Gabriel',D:'Os dois'}[resp]||'—';
-      var statusN=(st.status||{})[id];
-      var statusTxt=statusN==='2'?'Concluído':statusN==='1'?'Em andamento':'Não iniciado';
-      var oque=(st.content||{})[id+'.oque']||'';
-      var praque=(st.content||{})[id+'.praque']||'';
-      var como=(st.content||{})[id+'.como']||'';
       // título já vem com código; separa
       var codeMatch=title.match(/^(\S+)\s+([\s\S]*)$/);
       var code=codeMatch?codeMatch[1]:'';
       var ttl=codeMatch?codeMatch[2]:title;
-      html += '<div class="drw-code resp-'+resp+'">'+escapeHtml(code)+'</div>';
-      html += '<div class="drw-title">'+escapeHtml(ttl)+'</div>';
-      html += '<div class="drw-badges">';
-      html += '<span class="drw-badge resp-'+resp+'">'+escapeHtml(respName)+'</span>';
-      html += '<span class="drw-badge st-'+(statusN||'0')+'">'+statusTxt+'</span>';
-      html += '<span class="drw-badge due-'+status+'">'+(iso?('📅 '+fmtDrawer(iso)):'sem data')+'</span>';
-      html += '</div>';
-      if(oque) html += '<div class="drw-det"><span class="drw-k">O quê</span><p>'+escapeHtml(oque)+'</p></div>';
-      if(praque) html += '<div class="drw-det"><span class="drw-k">Pra quê</span><p>'+escapeHtml(praque)+'</p></div>';
-      if(como) html += '<div class="drw-det"><span class="drw-k">Como</span><p>'+escapeHtml(como)+'</p></div>';
-      if(!oque&&!praque&&!como) html += '<div class="drw-empty">Sem detalhes preenchidos ainda.</div>';
-      html += '<div class="drw-actions"><button class="drw-goto" data-goto-task="'+escapeHtml(id)+'">Abrir etapa no painel →</button></div>';
+      if(isInternal){
+        var resp=_resp(id,st);
+        var respName={V:'Vinicius',G:'Gabriel',D:'Os dois'}[resp]||'—';
+        var statusN=(st.status||{})[id];
+        var statusTxt=statusN==='2'?'Concluído':statusN==='1'?'Em andamento':'Não iniciado';
+        var oque=(st.content||{})[id+'.oque']||'';
+        var praque=(st.content||{})[id+'.praque']||'';
+        var como=(st.content||{})[id+'.como']||'';
+        html += '<div class="drw-code resp-'+resp+'">'+escapeHtml(code)+'</div>';
+        html += '<div class="drw-title">'+escapeHtml(ttl)+'</div>';
+        html += '<div class="drw-badges">';
+        html += '<span class="drw-badge resp-'+resp+'">'+escapeHtml(respName)+'</span>';
+        html += '<span class="drw-badge st-'+(statusN||'0')+'">'+statusTxt+'</span>';
+        html += '<span class="drw-badge due-'+status+'">'+(iso?('📅 '+fmtDrawer(iso)):'sem data')+'</span>';
+        html += '</div>';
+        if(oque) html += '<div class="drw-det"><span class="drw-k">O quê</span><p>'+escapeHtml(oque)+'</p></div>';
+        if(praque) html += '<div class="drw-det"><span class="drw-k">Pra quê</span><p>'+escapeHtml(praque)+'</p></div>';
+        if(como) html += '<div class="drw-det"><span class="drw-k">Como</span><p>'+escapeHtml(como)+'</p></div>';
+        if(!oque&&!praque&&!como) html += '<div class="drw-empty">Sem detalhes preenchidos ainda.</div>';
+        html += '<div class="drw-actions"><button class="drw-goto" data-goto-task="'+escapeHtml(id)+'">Abrir etapa no painel →</button></div>';
+      } else {
+        // CLIENTE: só o essencial — sem detalhes/status/responsável internos
+        html += '<div class="drw-code">'+escapeHtml(code)+'</div>';
+        html += '<div class="drw-title">'+escapeHtml(ttl)+'</div>';
+        html += '<div class="drw-badges">';
+        html += '<span class="drw-badge due-'+status+'">'+(iso?('📅 '+fmtDrawer(iso)):'sem data definida')+'</span>';
+        if(done) html += '<span class="drw-badge st-2">Concluída</span>';
+        html += '</div>';
+        html += '<div class="drw-actions"><button class="drw-goto" data-goto-task="'+escapeHtml(id)+'">Ver etapa no roteiro →</button></div>';
+      }
     }
     body.innerHTML=html;
     dr.classList.add('open');
@@ -3914,19 +3926,19 @@ window.NEON_FLUXO_NODES.forEach(function(n){ window.NEON_FLUXO_NODE_BY_ID[n.id]=
   };
   function gotoTaskCard(id){
     closeTaskDrawer();
-    // sai da agenda pra visão interna (se logado) ou cliente
-    var target = document.body.classList.contains('agenda-on') ? (window.__neonUnlocked ? 'interna':'cliente') : null;
-    if(window.setView) window.setView(window.__neonUnlocked?'interna':'cliente');
-    // garante fase aberta + etapa expandida ao chegar
-    try{
-      var s=JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
-      if(!s.ui) s.ui={}; if(!s.ui.task_open) s.ui.task_open=[]; if(!s.ui.phase_closed) s.ui.phase_closed=[];
-      if(s.ui.task_open.indexOf(id)<0) s.ui.task_open.push(id);
-      // descobre a fase da etapa e a abre
-      var cb0=document.getElementById(id); var ph0=cb0?cb0.getAttribute('data-phase'):null;
-      if(ph0!=null) s.ui.phase_closed=s.ui.phase_closed.filter(function(x){return String(x)!==String(ph0);});
-      localStorage.setItem('projeto_neon_lpncc', JSON.stringify(s));
-    }catch(e){}
+    var isInternal = !!window.__neonUnlocked;
+    if(window.setView) window.setView(isInternal?'interna':'cliente');
+    // Só expande o detalhe interno quando logado (cliente não vê taskint).
+    if(isInternal){
+      try{
+        var s=JSON.parse(localStorage.getItem('projeto_neon_lpncc')||'{}');
+        if(!s.ui) s.ui={}; if(!s.ui.task_open) s.ui.task_open=[]; if(!s.ui.phase_closed) s.ui.phase_closed=[];
+        if(s.ui.task_open.indexOf(id)<0) s.ui.task_open.push(id);
+        var cb0=document.getElementById(id); var ph0=cb0?cb0.getAttribute('data-phase'):null;
+        if(ph0!=null) s.ui.phase_closed=s.ui.phase_closed.filter(function(x){return String(x)!==String(ph0);});
+        localStorage.setItem('projeto_neon_lpncc', JSON.stringify(s));
+      }catch(e){}
+    }
     setTimeout(function(){
       if(window.__neonAccordion) window.__neonAccordion.apply();
       var el=document.querySelector('label.task[data-task-id="'+id+'"]') || (document.getElementById(id) && document.getElementById(id).closest('label.task'));
@@ -4059,7 +4071,7 @@ window.setRespFilter = function(rf){
 <!-- ABA FLUXO (mapa de dependências) -->
 <section id="sec-fluxo">
   <button class="close-fluxo" onclick="setView(document.body.classList.contains('internal-on')?'interna':'cliente')">✕ Voltar</button>
-  <iframe id="fluxoFrame" src="fluxo.html?v=9" title="Fluxo de dependências"></iframe>
+  <iframe id="fluxoFrame" src="fluxo.html?v=10" title="Fluxo do projeto"></iframe>
 </section>
 
 <script>
@@ -4075,101 +4087,82 @@ window.setRespFilter = function(rf){
     if(document.body.classList.contains('filter-resp-D')) return 'D';
     return 'all';
   }
-  function getPayload(){
-    try{
-      var st = JSON.parse(localStorage.getItem(KEY)||'{}');
-      return {
-        checks: st.checks || {},
-        custom_tasks: st.custom_tasks || [],
-        resp: st.resp || {},
-        resp_default: window.RESP_DEFAULT || {},
-        internal: document.body.classList.contains('internal-on'),
-        resp_filter: currentRespFilter(),
-        fluxo_overrides: st.fluxo_overrides || {}
-      };
-    }catch(e){ return {checks:{}, custom_tasks:[], resp:{}, resp_default:{}, internal:false, resp_filter:'all', fluxo_overrides:{}}; }
+  // Constrói o MODELO de etapas real a partir do DOM da visão interna:
+  // 1 nó por etapa (nativa + custom), com título atual, dependências (tag "após X"),
+  // fase, status, responsável, data e flags. É a fonte da verdade pro fluxo.
+  function _st(){ try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};} }
+  function buildModel(){
+    var st=_st();
+    var respDefault = window.RESP_DEFAULT||{};
+    var tasks=[];
+    [].slice.call(document.querySelectorAll('label.task')).forEach(function(lbl){
+      var cb=lbl.querySelector('input[type=checkbox]'); if(!cb||!cb.id) return;
+      var id=cb.id;
+      var phase=cb.getAttribute('data-phase');
+      var codeEl=lbl.querySelector('.code'); var code=codeEl?codeEl.textContent.trim():'';
+      // título limpo (remove o chip de data que fica no .lbl)
+      var txtEl=lbl.querySelector('.txt'); var title='';
+      if(txtEl){ var clone=txtEl.cloneNode(true); [].slice.call(clone.querySelectorAll('.due-chip')).forEach(function(c){c.remove();}); title=clone.textContent.trim(); }
+      // dependência: lê a tag .dep (já reflete overrides). Extrai códigos "após X.Y · Z.W".
+      var depEl=lbl.querySelector('.dep'); var depText=depEl?depEl.textContent.trim():'';
+      var preds=(depText.match(/\d+[A-Z]?\.\d+/g)||[]).filter(function(c){return c!==code;});
+      var gate = /aprova/i.test(depText) || (depEl&&depEl.classList&&depEl.classList.contains('gate'));
+      var cond = String(phase)==='4';
+      var kind = lbl.getAttribute('data-task-kind')==='custom' ? 'custom' : 'native';
+      tasks.push({
+        id:id, code:code, title:title, phase:phase,
+        status:(st.status&&st.status[id])||'0',
+        resp:(st.resp&&st.resp[id])||respDefault[id]||'D',
+        done:!!(st.checks&&st.checks[id]),
+        due:(st.due_dates&&st.due_dates[id])||'',
+        preds:preds, gate:!!gate, cond:cond, kind:kind,
+        deleted:!!(st.deleted&&st.deleted[id])
+      });
+    });
+    return tasks;
   }
-  function sendChecks(){
-    var f = document.getElementById('fluxoFrame');
-    if(!f || !f.contentWindow) return;
-    var p = getPayload();
+  function sendModel(){
+    var f=document.getElementById('fluxoFrame');
+    if(!f||!f.contentWindow) return;
     try{
-      f.contentWindow.postMessage({type:'neon-checks',
-        checks: p.checks,
-        custom_tasks: p.custom_tasks,
-        resp: p.resp,
-        resp_default: p.resp_default,
-        internal: p.internal,
-        resp_filter: p.resp_filter,
-        fluxo_overrides: p.fluxo_overrides
+      f.contentWindow.postMessage({
+        type:'neon-model',
+        tasks: buildModel(),
+        internal: document.body.classList.contains('internal-on'),
+        resp_filter: currentRespFilter()
       }, '*');
     }catch(e){}
   }
-  window.__neonFluxoSendChecks = sendChecks; // exposto pra setRespFilter chamar
+  window.__neonFluxoSendChecks = sendModel; // compat: setRespFilter chama isto
 
-  // Iframe avisa quando carregou (handshake): aí enviamos o state.
+  // Handshake: quando o iframe carrega, envia o modelo.
   window.addEventListener('message', function(ev){
     if(!ev.data || typeof ev.data!=='object') return;
-    if(ev.data.type==='neon-fluxo-ready'){
-      fluxoChildReady = true;
-      sendChecks();
-    } else if(ev.data.type==='neon-edit-ct' && ev.data.id){
-      // Iframe pediu pra editar uma custom task → volta pra visão interna e abre modal
-      try{
-        var st = JSON.parse(localStorage.getItem(KEY)||'{}');
-        var t = (st.custom_tasks||[]).find(function(x){return x.id===ev.data.id;});
-        if(t){
-          window.setView('interna');
-          setTimeout(function(){ window.openModal(t.phase, t.id); }, 250);
-        }
-      }catch(e){}
-    } else if(ev.data.type==='neon-fluxo-edit' && ev.data.id){
-      // Iframe editou um node nativo do fluxo → grava override em state.fluxo_overrides
-      try{
-        var s = JSON.parse(localStorage.getItem(KEY)||'{}');
-        if(!s.fluxo_overrides) s.fluxo_overrides = {};
-        if(ev.data.changed){
-          s.fluxo_overrides[ev.data.id] = {t: ev.data.t, sub: ev.data.sub};
-        } else {
-          delete s.fluxo_overrides[ev.data.id];
-        }
-        localStorage.setItem(KEY, JSON.stringify(s));
-      }catch(e){}
-    }
+    if(ev.data.type==='neon-fluxo-ready'){ fluxoChildReady=true; sendModel(); }
   });
 
-  // Decora setView pra ativar a classe fluxo-on e empurrar o state ao entrar.
+  // Decora setView pra ativar fluxo-on e empurrar o modelo ao entrar.
   var _origSV = window.setView;
   window.setView = function(v){
     if(v==='fluxo'){
       document.body.classList.remove('contrato-on');
       document.body.classList.add('fluxo-on');
-      // Marca o botão Fluxo como ativo (espelha o que setView original faz)
-      ['btnCli','btnInt','btnCon','btnFlx'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
-      var btn = document.getElementById('btnFlx'); if(btn) btn.classList.add('active');
-      // Sempre tenta enviar (mesmo se handshake ainda não rolou — iframe pode receber tarde)
-      sendChecks();
-      setTimeout(sendChecks, 250);
-      setTimeout(sendChecks, 800);
+      ['btnCli','btnInt','btnCon','btnFlx','btnAgd'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('active'); });
+      var btn=document.getElementById('btnFlx'); if(btn) btn.classList.add('active');
+      sendModel(); setTimeout(sendModel,250); setTimeout(sendModel,800);
       return;
     }
     document.body.classList.remove('fluxo-on');
     if(_origSV) _origSV(v);
   };
 
-  // Polling leve pra detectar mudanças no state.checks e propagar pro iframe.
-  // (Não usamos monkey-patch em setItem porque o sync-layer.js também faz isso,
-  // e a ordem de boot deixaria nosso patch perdido.)
-  var _lastSig = '';
+  // Polling: detecta qualquer mudança (título, dep, status, resp, ordem, add/remove) e reenvia.
+  var _lastSig='';
   setInterval(function(){
     if(!fluxoChildReady) return;
-    var sig;
-    try{ sig = JSON.stringify(getPayload()); }catch(e){ sig = ''; }
-    if(sig !== _lastSig){
-      _lastSig = sig;
-      sendChecks();
-    }
-  }, 800);
+    var sig; try{ sig=JSON.stringify(buildModel())+'|'+document.body.classList.contains('internal-on')+'|'+currentRespFilter(); }catch(e){ sig=''; }
+    if(sig!==_lastSig){ _lastSig=sig; sendModel(); }
+  }, 700);
 })();
 </script>
 
